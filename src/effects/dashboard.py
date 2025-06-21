@@ -184,5 +184,6 @@ def render_dashboard_effect(
 
     def _render() -> None:
         render_callback(state)
+        return None
 
     return PureIO(_render())
