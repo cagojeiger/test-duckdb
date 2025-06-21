@@ -204,7 +204,7 @@ class CheckpointManager:
             if not results:
                 raise ValueError("No experiment results available for analysis export")
 
-            analysis_data = {
+            analysis_data: Dict[str, Any] = {
                 "metadata": {
                     "export_timestamp": datetime.now().isoformat(),
                     "total_experiments": len(results),
