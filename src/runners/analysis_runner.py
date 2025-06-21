@@ -113,7 +113,7 @@ class AnalysisRunner:
                 print(f"❌ No experiment results found in {self.checkpoint_dir}")
                 sys.exit(1)
 
-            app = create_dashboard_app(results)
+            create_dashboard_app(results)
 
             print(f"📊 Dashboard available at: http://localhost:{self.port}")
             print("Press Ctrl+C to stop the dashboard")

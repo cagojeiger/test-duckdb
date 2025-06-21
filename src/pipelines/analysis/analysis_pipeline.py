@@ -16,8 +16,6 @@ from src.pure.analyzers.performance_analyzer import (
     TrendAnalysis,
     analyze_dimension_performance,
     calculate_performance_trends,
-    analyze_search_type_performance,
-    compare_accuracy_metrics,
 )
 from src.effects.visualization.chart_generator import (
     generate_performance_heatmap,
@@ -389,8 +387,6 @@ def analysis_pipeline(checkpoint_dir: str, output_dir: str = "analysis") -> IO[s
 
         analysis = analyze_dimension_performance(results)
         trends = calculate_performance_trends(results)
-        search_comparison = analyze_search_type_performance(results)
-        accuracy_comparison = compare_accuracy_metrics(results)
 
         viz_io = generate_visualizations(analysis, trends)
         visualization_paths = viz_io.run()

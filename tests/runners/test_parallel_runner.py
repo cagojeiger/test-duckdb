@@ -289,11 +289,6 @@ class TestParallelExperimentRunner:
         mock_future_failure = Mock()
         mock_future_failure.result.side_effect = Exception("Experiment failed")
 
-        future_to_config = {
-            mock_future_success: mock_configs[0],
-            mock_future_failure: mock_configs[1],
-        }
-
         mock_executor.submit.side_effect = [mock_future_success, mock_future_failure]
 
         with patch("concurrent.futures.as_completed") as mock_as_completed:
