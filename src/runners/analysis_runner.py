@@ -8,7 +8,7 @@ import argparse
 import sys
 import time
 from pathlib import Path
-from typing import List
+from typing import List, Any
 
 from src.types.core import ExperimentResult
 from src.pipelines.analysis.analysis_pipeline import (
@@ -131,7 +131,7 @@ class AnalysisRunner:
             sys.exit(1)
 
     def _print_analysis_summary(
-        self, analysis, results: List[ExperimentResult]
+        self, analysis: Any, results: List[ExperimentResult]
     ) -> None:
         """Print analysis summary to console."""
         print("\n" + "=" * 60)
