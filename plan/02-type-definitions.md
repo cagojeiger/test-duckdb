@@ -130,6 +130,24 @@ class ExperimentResult:
     search_results: List[SearchResult]
     accuracy: AccuracyMetrics
     timestamp: datetime
+
+# Phase 4B: 병렬 실행 타입 (구현 완료)
+@dataclass(frozen=True)
+class ParallelConfig:
+    """병렬 실행 설정"""
+    max_workers: int = 4
+    memory_threshold_mb: int = 6000
+    experiment_timeout_seconds: int = 300
+    batch_size: int = 8
+
+@dataclass(frozen=True)
+class ParallelResult:
+    """병렬 실행 결과"""
+    results: List[ExperimentResult]
+    failed_configs: List[ExperimentConfig]
+    execution_time_seconds: float
+    peak_memory_mb: float
+    worker_count_used: int
 ```
 
 ## Effect 타입
@@ -240,6 +258,11 @@ BatchResult = List[ExperimentResult]
 DataGenerator = Callable[[ExperimentConfig], IO[List[Document]]]
 VectorSearch = Callable[[Vector, int], IO[List[SearchResult]]]
 MetricsCollector = Callable[[IO[T]], IO[Tuple[T, Metrics]]]
+
+# Phase 4B: 병렬 실행 함수 타입 (구현 완료)
+ParallelExecutor = Callable[[List[ExperimentConfig]], IO[ParallelResult]]
+WorkerFunction = Callable[[ExperimentConfig], ExperimentResult]
+ProgressCallback = Callable[[int, int], None]
 ```
 
 ## 타입 검증

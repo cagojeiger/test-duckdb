@@ -24,6 +24,7 @@
 ### 🛠️ 핵심 기술
 - **데이터베이스**: DuckDB + VSS 확장 (HNSW 인덱싱)
 - **언어**: Python 3.12+
+- **병렬 처리**: concurrent.futures (멀티프로세싱)
 - **데이터 생성**: Faker (한국어 로케일)
 - **성능 측정**: psutil, time, DuckDB EXPLAIN ANALYZE
 - **시각화**: matplotlib, seaborn, plotly
@@ -70,7 +71,8 @@
 ### 📊 결과물
 - **성능 벤치마크 리포트**: 상세한 분석 및 권장사항
 - **최적화 가이드**: HNSW 파라미터 튜닝 가이드
-- **시각화 대시보드**: 인터랙티브 성능 분석 도구
+- **병렬 실행 성능**: 멀티프로세싱을 통한 실험 시간 단축
+- **시각화 대시보드**: 인터랙티브 성능 분석 도구 (예정)
 - **실용 가이드**: 프로덕션 환경 적용 방안
 
 ## 시작하기
@@ -79,6 +81,7 @@
 - Python 3.12+
 - DuckDB + VSS 확장
 - 최소 8GB RAM (대규모 실험용 16GB+ 권장)
+- 멀티코어 CPU (병렬 실행 시 성능 향상)
 
 ### 🚀 설치 및 실행
 ```bash
@@ -86,14 +89,26 @@
 git clone https://github.com/cagojeiger/test-duckdb.git
 cd test-duckdb
 
-# 의존성 설치
-pip install -r requirements.txt
+# 의존성 설치 (uv 사용 권장)
+uv sync
 
-# DuckDB VSS 확장 설치
-python -c "import duckdb; duckdb.install_extension('vss')"
+# DuckDB VSS 확장 설치 및 확인
+python test_duckdb_vss_installation.py
 
-# 실험 실행
-python main.py --experiment text_similarity --scale small
+# 테스트 실행
+pytest tests/ -v
+
+# 실험 실행 (순차)
+python -m src.runners.experiment_runner --all
+
+# 실험 실행 (병렬) - 권장
+python -m src.runners.experiment_runner --all --parallel
+
+# 커스텀 병렬 설정
+python -m src.runners.experiment_runner --all --parallel --workers 6 --max-memory 8000
+
+# 특정 조건 실험
+python -m src.runners.experiment_runner --data-scale small --dimensions 128 256 --parallel
 ```
 
 ## 기여하기

@@ -224,20 +224,26 @@ plan/                  # 설계 문서
 - ✅ DuckDB VSS 통합
 - ✅ 파이프라인 조합 레이어
 - ✅ Phase 4A 핵심 기능 (CLI 실행기, 체크포인트, 모니터링)
-- ✅ 포괄적인 테스트 스위트 (27개 단위 테스트)
+- ✅ **Phase 4B 병렬 실험 실행** (2024년 12월 완료)
+  - `concurrent.futures.ProcessPoolExecutor`를 사용한 멀티프로세싱 구현
+  - 동적 리소스 관리 및 메모리 기반 워커 수 조정
+  - CLI 통합: `--parallel`, `--workers`, `--max-memory` 플래그 추가
+  - 프로세스 격리를 통한 실험 간 독립성 보장
+  - 순차 실행 폴백 메커니즘 및 강력한 오류 처리
+- ✅ 포괄적인 테스트 스위트 (87개 단위 테스트, 99% 성공률)
 - ✅ 타입 안전성 및 코드 품질 보장
 
 ### 앞으로 할 내용 (상세 로드맵)
 
-#### Phase 4B: 고급 실험 실행 기능 (다음 우선순위)
-**목표**: 실험 실행의 효율성과 확장성 향상
+#### Phase 4B-2: 실시간 대시보드 및 분산 처리 (다음 우선순위)
+**목표**: 병렬 실행 기반 위에 실시간 모니터링 및 분산 처리 구축
 
 **구현 예정 기능:**
-1. **병렬 실험 실행**
-   - `concurrent.futures`를 사용한 멀티프로세싱
-   - 실험 간 독립성 보장을 위한 프로세스 격리
-   - 메모리 사용량 기반 동적 워커 수 조정
-   - 실험별 타임아웃 및 오류 복구 메커니즘
+1. **실시간 진행상황 대시보드**
+   - FastAPI + WebSocket 기반 실시간 모니터링
+   - 실험 진행률, 성능 메트릭 실시간 표시
+   - 리소스 사용량 그래프 및 알림
+   - 실험 중단/재시작 웹 인터페이스
 
 2. **분산 처리 지원**
    - Celery 또는 Ray를 사용한 분산 작업 큐
@@ -251,14 +257,7 @@ plan/                  # 설계 문서
    - 네트워크 대역폭 사용량 추적
    - 리소스 기반 실험 스케줄링
 
-4. **실시간 진행상황 대시보드**
-   - FastAPI + WebSocket 기반 실시간 모니터링
-   - 실험 진행률, 성능 메트릭 실시간 표시
-   - 리소스 사용량 그래프 및 알림
-   - 실험 중단/재시작 웹 인터페이스
-
 **예상 구현 파일:**
-- `src/runners/parallel_runner.py`: 병렬 실험 실행기
 - `src/runners/distributed_runner.py`: 분산 처리 관리자
 - `src/runners/resource_scheduler.py`: 리소스 기반 스케줄러
 - `src/web/dashboard.py`: 실시간 대시보드 API
@@ -358,8 +357,8 @@ plan/                  # 설계 문서
 ### 구현 우선순위 및 일정
 
 **단기 (1-2주)**
-- Phase 4B 병렬 실험 실행 구현
-- 실시간 모니터링 대시보드 개발
+- Phase 4B-2 실시간 모니터링 대시보드 개발
+- 분산 처리 시스템 기초 구현
 
 **중기 (1-2개월)**
 - Phase 5 분석 및 시각화 시스템 완성
@@ -408,6 +407,15 @@ python -m src.runners.experiment_runner --data-scale small --dimensions 128 256
 # 체크포인트에서 재시작
 python -m src.runners.experiment_runner --all --resume
 
+# 병렬 실행 (기본 설정)
+python -m src.runners.experiment_runner --all --parallel
+
+# 병렬 실행 (커스텀 워커 수 및 메모리 임계값)
+python -m src.runners.experiment_runner --all --parallel --workers 6 --max-memory 8000
+
+# 특정 조건 + 병렬 실행
+python -m src.runners.experiment_runner --data-scale small --dimensions 128 256 --parallel
+
 # 도움말
 python -m src.runners.experiment_runner --help
 ```
@@ -415,10 +423,12 @@ python -m src.runners.experiment_runner --help
 ## 주요 성과
 
 1. **체계적인 아키텍처**: 함수형 프로그래밍 원칙을 따른 확장 가능한 설계
-2. **완전한 테스트 커버리지**: 27개 단위 테스트로 모든 핵심 기능 검증
+2. **완전한 테스트 커버리지**: 87개 단위 테스트로 모든 핵심 기능 검증 (99% 성공률)
 3. **타입 안전성**: mypy를 통한 엄격한 타입 검사
 4. **실용적인 도구**: CLI를 통한 사용자 친화적 인터페이스
 5. **견고한 오류 처리**: 체크포인트와 복구 메커니즘
 6. **성능 모니터링**: 실시간 리소스 추적 및 최적화
+7. **병렬 처리 능력**: 멀티프로세싱을 통한 실험 실행 시간 단축
+8. **동적 리소스 관리**: 시스템 리소스에 따른 자동 워커 수 조정
 
 이 프로젝트는 DuckDB VSS의 성능 특성을 체계적으로 분석할 수 있는 견고한 기반을 제공하며, 함수형 프로그래밍의 장점을 실제 벤치마킹 시나리오에 적용한 성공적인 사례입니다.

@@ -59,6 +59,12 @@ pipelines/
 ├── experiments/   # 실험 실행 파이프라인
 ├── analysis/      # 분석 파이프라인
 └── reporting/     # 리포트 생성 파이프라인
+
+runners/           # 실행 엔진 (Phase 4B 완료)
+├── experiment_runner.py    # CLI 실험 실행기
+├── parallel_runner.py      # 병렬 실행 엔진 ✅
+├── checkpoint.py           # 체크포인트 관리
+└── monitoring.py           # 리소스 모니터링
 ```
 
 ## 데이터 플로우
@@ -90,19 +96,32 @@ result = (
 - 대체 경로(fallback) 제공
 - 부분 실패 허용
 
-## 병렬 처리 설계
+## 병렬 처리 설계 (Phase 4B 완료)
 
-### 불변성을 활용한 안전한 병렬화
+### 불변성을 활용한 안전한 병렬화 ✅
 ```python
-# 48개 실험 조합을 병렬로 실행
+# 48개 실험 조합을 병렬로 실행 (구현 완료)
 experiments = generate_all_experiments()
 results = parallel_map(run_single_experiment, experiments)
+
+# ParallelExperimentRunner 클래스 구현
+parallel_runner = ParallelExperimentRunner(config)
+parallel_io = parallel_runner.run_experiments_parallel(configs)
+results = parallel_io.run()
 ```
 
-### 리소스 풀 관리
-- DB 연결 풀을 Reader 모나드로 전달
+### 리소스 풀 관리 ✅
+- ProcessPoolExecutor를 사용한 프로세스 격리
+- 동적 워커 수 조정 (메모리 및 CPU 기반)
 - 각 실험은 독립적으로 실행
 - 결과는 불변 객체로 수집
+- 메모리 임계값 모니터링 및 자동 조정
+
+### 구현된 병렬 처리 기능
+- `src/runners/parallel_runner.py`: 병렬 실행 엔진
+- `ParallelConfig`: 병렬 실행 설정 관리
+- `ParallelResult`: 실행 결과 및 메트릭
+- CLI 통합: `--parallel`, `--workers`, `--max-memory` 플래그
 
 ## 테스트 전략
 
