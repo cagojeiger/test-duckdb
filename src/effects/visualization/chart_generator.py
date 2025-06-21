@@ -31,7 +31,7 @@ def generate_performance_heatmap(
             import matplotlib.pyplot as plt
             import seaborn as sns
             import pandas as pd
-            import numpy as np
+
         except ImportError:
             raise ImportError(
                 "matplotlib, seaborn, and pandas are required for chart generation"
@@ -243,9 +243,9 @@ def export_interactive_dashboard(
     def _export_dashboard() -> str:
         try:
             import plotly.graph_objects as go
-            import plotly.express as px
+
             from plotly.subplots import make_subplots
-            import plotly.offline as pyo
+
         except ImportError:
             raise ImportError("plotly is required for interactive dashboard generation")
 

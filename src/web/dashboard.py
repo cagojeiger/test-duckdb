@@ -11,7 +11,7 @@ from datetime import datetime
 
 try:
     from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
-    from fastapi.staticfiles import StaticFiles
+
     from fastapi.responses import HTMLResponse, JSONResponse
     from fastapi.middleware.cors import CORSMiddleware
 
@@ -50,7 +50,7 @@ class ConnectionManager:
         for connection in self.active_connections:
             try:
                 await connection.send_text(message)
-            except:
+            except Exception:
                 self.disconnect(connection)
 
 
