@@ -7,7 +7,7 @@ Implements concurrent experiment execution with process isolation and resource m
 import time
 import psutil
 from concurrent.futures import ProcessPoolExecutor, as_completed, Future
-from typing import List, Optional, Dict, Callable
+from typing import List, Optional, Dict, Callable, Any
 from dataclasses import dataclass
 
 from src.types.core import ExperimentConfig, ExperimentResult
@@ -77,7 +77,7 @@ class ParallelExperimentRunner:
                 peak_memory = 0.0
 
                 with ProcessPoolExecutor(max_workers=initial_workers) as executor:
-                    future_to_config: Dict[Future, ExperimentConfig] = {}
+                    future_to_config: Dict[Future[Any], ExperimentConfig] = {}
 
                     for config in configs:
                         future = executor.submit(_run_single_experiment_worker, config)
@@ -238,7 +238,7 @@ class ParallelExperimentRunner:
         """Check if system is under memory pressure"""
         try:
             memory = psutil.virtual_memory()
-            return memory.percent > 85  # Consider 85%+ usage as pressure
+            return bool(memory.percent > 85)  # Consider 85%+ usage as pressure
         except Exception:
             return False
 
