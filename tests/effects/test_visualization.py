@@ -2,6 +2,7 @@ from unittest.mock import patch, MagicMock, mock_open
 from pathlib import Path
 import tempfile
 import os
+from typing import Any
 
 from src.types.monads import IO
 from src.pure.analyzers.performance_analyzer import PerformanceAnalysis, TrendAnalysis
@@ -74,7 +75,7 @@ class TestVisualizationEffects:
     @patch("seaborn.heatmap")
     @patch("matplotlib.pyplot.subplots")
     def test_generate_performance_heatmap_execution(
-        self, mock_subplots, mock_heatmap, mock_close, mock_savefig
+        self, mock_subplots: Any, mock_heatmap: Any, mock_close: Any, mock_savefig: Any
     ) -> None:
         """성능 히트맵 생성 실행 테스트 (Mock 사용)"""
         analysis = self.create_sample_performance_analysis()
@@ -108,7 +109,7 @@ class TestVisualizationEffects:
     @patch("matplotlib.pyplot.close")
     @patch("matplotlib.pyplot.subplots")
     def test_create_trend_charts_execution(
-        self, mock_subplots, mock_close, mock_savefig
+        self, mock_subplots: Any, mock_close: Any, mock_savefig: Any
     ) -> None:
         """트렌드 차트 생성 실행 테스트 (Mock 사용)"""
         trends = self.create_sample_trend_analysis()
@@ -143,7 +144,7 @@ class TestVisualizationEffects:
         assert isinstance(result, IO)
 
     @patch("builtins.open", new_callable=mock_open)
-    def test_export_interactive_dashboard_execution(self, mock_file) -> None:
+    def test_export_interactive_dashboard_execution(self, mock_file: Any) -> None:
         """인터랙티브 대시보드 내보내기 실행 테스트 (Mock 사용)"""
         analysis = self.create_sample_performance_analysis()
         trends = self.create_sample_trend_analysis()
@@ -247,7 +248,7 @@ class TestVisualizationEffects:
 
     @patch("matplotlib.pyplot.savefig")
     @patch("pathlib.Path.mkdir")
-    def test_directory_creation(self, mock_mkdir, mock_savefig) -> None:
+    def test_directory_creation(self, mock_mkdir: Any, mock_savefig: Any) -> None:
         """출력 디렉토리 생성 테스트"""
         analysis = self.create_sample_performance_analysis()
 
