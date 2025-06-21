@@ -257,7 +257,7 @@ class TestParallelExperimentRunner:
                         return_value=1000.0,
                     ):
                         parallel_io = self.runner.run_experiments_parallel(mock_configs)
-                        result = parallel_io.run()
+                        result: ParallelResult = parallel_io.run()
 
         assert len(result.results) == 2
         assert len(result.failed_configs) == 0
@@ -302,7 +302,7 @@ class TestParallelExperimentRunner:
                         return_value=1000.0,
                     ):
                         parallel_io = self.runner.run_experiments_parallel(mock_configs)
-                        result = parallel_io.run()
+                        result: ParallelResult = parallel_io.run()
 
         assert len(result.results) == 1  # One success
         assert len(result.failed_configs) == 1  # One failure
