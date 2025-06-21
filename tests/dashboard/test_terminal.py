@@ -3,15 +3,12 @@ Unit tests for the Terminal Dashboard
 Tests the TerminalDashboard class and dashboard functionality
 """
 
-import time
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from datetime import datetime
-from pathlib import Path
 
 import pytest
 
 from src.dashboard.terminal import TerminalDashboard, DashboardState
-from src.types.dashboard import ExperimentProgress, ResourceMetrics, PerformanceCharts
 from src.types.core import ExperimentResult, ExperimentConfig
 from src.types.core import (
     DataScale,
@@ -48,7 +45,7 @@ class TestDashboardState:
         state = DashboardState(
             current_experiment="test-experiment",
             total_experiments=10,
-            completed_experiments=5
+            completed_experiments=5,
         )
 
         assert state.recent_results == []
@@ -117,7 +114,7 @@ class TestTerminalDashboard:
         assert self.dashboard.is_running is False
         assert self.dashboard.live is None
 
-    @patch.object(TerminalDashboard, '_update_display')
+    @patch.object(TerminalDashboard, "_update_display")
     def test_update_progress(self, mock_update_display: Mock) -> None:
         """Test progress update functionality"""
         initial_state = self.dashboard.state
@@ -130,7 +127,7 @@ class TestTerminalDashboard:
         assert self.dashboard.state.start_time == initial_state.start_time
         mock_update_display.assert_called_once()
 
-    @patch.object(TerminalDashboard, '_update_display')
+    @patch.object(TerminalDashboard, "_update_display")
     def test_update_batch_progress(self, mock_update_display: Mock) -> None:
         """Test batch progress update functionality"""
         self.dashboard.update_batch_progress(2, 5)
@@ -139,7 +136,7 @@ class TestTerminalDashboard:
         assert self.dashboard.state.total_batches == 5
         mock_update_display.assert_called_once()
 
-    @patch.object(TerminalDashboard, '_update_display')
+    @patch.object(TerminalDashboard, "_update_display")
     def test_update_resources(self, mock_update_display: Mock) -> None:
         """Test resource update functionality"""
         snapshot = ResourceSnapshot(
@@ -148,7 +145,7 @@ class TestTerminalDashboard:
             memory_percent=75.0,
             cpu_percent=50.0,
             available_memory_mb=2048.0,
-            process_memory_mb=1024.0
+            process_memory_mb=1024.0,
         )
 
         self.dashboard.update_resources(snapshot)
@@ -156,7 +153,7 @@ class TestTerminalDashboard:
         assert self.dashboard.state.latest_resource_snapshot == snapshot
         mock_update_display.assert_called_once()
 
-    @patch.object(TerminalDashboard, '_update_display')
+    @patch.object(TerminalDashboard, "_update_display")
     def test_add_result(self, mock_update_display: Mock) -> None:
         """Test adding experiment result"""
         result = self._create_mock_result()
@@ -167,7 +164,7 @@ class TestTerminalDashboard:
         assert self.dashboard.state.recent_results[0] == result
         mock_update_display.assert_called_once()
 
-    @patch.object(TerminalDashboard, '_update_display')
+    @patch.object(TerminalDashboard, "_update_display")
     def test_add_result_max_limit(self, mock_update_display: Mock) -> None:
         """Test adding results with maximum limit"""
         results = [self._create_mock_result() for _ in range(12)]
@@ -178,7 +175,7 @@ class TestTerminalDashboard:
         assert len(self.dashboard.state.recent_results) == 10
         assert self.dashboard.state.recent_results[-1] == results[-1]
 
-    @patch.object(TerminalDashboard, '_update_display')
+    @patch.object(TerminalDashboard, "_update_display")
     def test_add_alert(self, mock_update_display: Mock) -> None:
         """Test adding alert message"""
         message = "Test alert message"
@@ -189,7 +186,7 @@ class TestTerminalDashboard:
         assert message in self.dashboard.state.alerts[0]
         mock_update_display.assert_called_once()
 
-    @patch.object(TerminalDashboard, '_update_display')
+    @patch.object(TerminalDashboard, "_update_display")
     def test_add_alert_max_limit(self, mock_update_display: Mock) -> None:
         """Test adding alerts with maximum limit"""
         messages = [f"Alert {i}" for i in range(7)]
@@ -206,12 +203,12 @@ class TestTerminalDashboard:
 
         self.dashboard._update_display()
 
-    @patch.object(TerminalDashboard, '_create_header_panel')
-    @patch.object(TerminalDashboard, '_create_progress_panel')
-    @patch.object(TerminalDashboard, '_create_resources_panel')
-    @patch.object(TerminalDashboard, '_create_metrics_panel')
-    @patch.object(TerminalDashboard, '_create_results_panel')
-    @patch.object(TerminalDashboard, '_create_footer_panel')
+    @patch.object(TerminalDashboard, "_create_header_panel")
+    @patch.object(TerminalDashboard, "_create_progress_panel")
+    @patch.object(TerminalDashboard, "_create_resources_panel")
+    @patch.object(TerminalDashboard, "_create_metrics_panel")
+    @patch.object(TerminalDashboard, "_create_results_panel")
+    @patch.object(TerminalDashboard, "_create_footer_panel")
     def test_update_display_running(
         self,
         mock_footer: Mock,
@@ -249,7 +246,7 @@ class TestTerminalDashboard:
         self.dashboard.state = DashboardState(
             total_experiments=10,
             completed_experiments=5,
-            current_experiment="test-experiment"
+            current_experiment="test-experiment",
         )
 
         panel = self.dashboard._create_progress_panel()
@@ -270,7 +267,7 @@ class TestTerminalDashboard:
             memory_percent=75.0,
             cpu_percent=50.0,
             available_memory_mb=2048.0,
-            process_memory_mb=1024.0
+            process_memory_mb=1024.0,
         )
         self.dashboard.state = DashboardState(latest_resource_snapshot=snapshot)
 
@@ -387,7 +384,7 @@ class TestDashboardIntegration:
             memory_percent=75.0,
             cpu_percent=50.0,
             available_memory_mb=2048.0,
-            process_memory_mb=1024.0
+            process_memory_mb=1024.0,
         )
         self.dashboard.update_resources(snapshot)
         assert self.dashboard.state.latest_resource_snapshot == snapshot
@@ -395,7 +392,7 @@ class TestDashboardIntegration:
         self.dashboard.stop()
         assert self.dashboard.is_running is False
 
-    @patch.object(TerminalDashboard, '_update_display')
+    @patch.object(TerminalDashboard, "_update_display")
     def test_dashboard_error_handling(self, mock_update_display: Mock) -> None:
         """Test dashboard error handling"""
         mock_update_display.side_effect = Exception("Display error")
@@ -408,9 +405,9 @@ class TestDashboardIntegration:
     def test_dashboard_state_immutability(self) -> None:
         """Test that dashboard state updates create new state objects"""
         initial_state = self.dashboard.state
-        
+
         self.dashboard.update_progress(5, 10)
-        
+
         assert self.dashboard.state is not initial_state
         assert initial_state.completed_experiments == 0
         assert self.dashboard.state.completed_experiments == 5

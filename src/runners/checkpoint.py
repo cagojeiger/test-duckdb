@@ -190,59 +190,71 @@ class CheckpointManager:
 
     def export_analysis_data(self, output_path: str) -> IO[str]:
         """Export experiment results in analysis-optimized format.
-        
+
         Args:
             output_path: Path to save the analysis data file
-            
+
         Returns:
             IO[str]: Path to the exported analysis data file
         """
+
         def _export_analysis() -> str:
             results = self.load_all_results()
-            
+
             if not results:
                 raise ValueError("No experiment results available for analysis export")
-            
+
             analysis_data = {
                 "metadata": {
                     "export_timestamp": datetime.now().isoformat(),
                     "total_experiments": len(results),
                     "data_format_version": "analysis_v1.0",
-                    "experiment_matrix_completion": (len(results) / 48.0) * 100
+                    "experiment_matrix_completion": (len(results) / 48.0) * 100,
                 },
-                "experiments": []
+                "experiments": [],
             }
-            
+
             for result in results:
                 experiment_data = {
                     "experiment_id": self._generate_experiment_id(result.config),
                     "timestamp": result.timestamp.isoformat(),
-                    
                     "data_scale": result.config.data_scale.name,
                     "data_scale_value": result.config.data_scale.value,
                     "dimension": int(result.config.dimension),
                     "search_type": result.config.search_type.value,
                     "filter_enabled": result.config.filter_config.enabled,
-                    "filter_category": result.config.filter_config.category.value if result.config.filter_config.category else None,
-                    
+                    "filter_category": result.config.filter_config.category.value
+                    if result.config.filter_config.category
+                    else None,
                     "ef_construction": result.config.hnsw_params.ef_construction,
                     "ef_search": result.config.hnsw_params.ef_search,
                     "M": result.config.hnsw_params.M,
                     "metric": result.config.hnsw_params.metric,
-                    
                     "insert_time_ms": result.insert_metrics.query_time_ms,
                     "insert_throughput_qps": result.insert_metrics.throughput_qps,
                     "insert_memory_mb": result.insert_metrics.memory_usage_mb,
-                    
                     "index_build_time_ms": result.index_metrics.query_time_ms,
                     "index_memory_mb": result.index_metrics.memory_usage_mb,
                     "index_size_mb": result.index_metrics.index_size_mb,
-                    
                     "total_search_queries": len(result.search_results),
-                    "avg_query_time_ms": sum(sr.metrics.query_time_ms for sr in result.search_results) / len(result.search_results) if result.search_results else 0.0,
-                    "avg_throughput_qps": sum(sr.metrics.throughput_qps for sr in result.search_results) / len(result.search_results) if result.search_results else 0.0,
-                    "avg_search_memory_mb": sum(sr.metrics.memory_usage_mb for sr in result.search_results) / len(result.search_results) if result.search_results else 0.0,
-                    
+                    "avg_query_time_ms": sum(
+                        sr.metrics.query_time_ms for sr in result.search_results
+                    )
+                    / len(result.search_results)
+                    if result.search_results
+                    else 0.0,
+                    "avg_throughput_qps": sum(
+                        sr.metrics.throughput_qps for sr in result.search_results
+                    )
+                    / len(result.search_results)
+                    if result.search_results
+                    else 0.0,
+                    "avg_search_memory_mb": sum(
+                        sr.metrics.memory_usage_mb for sr in result.search_results
+                    )
+                    / len(result.search_results)
+                    if result.search_results
+                    else 0.0,
                     "search_results": [
                         {
                             "query_id": sr.query_id,
@@ -250,76 +262,93 @@ class CheckpointManager:
                             "throughput_qps": sr.metrics.throughput_qps,
                             "memory_usage_mb": sr.metrics.memory_usage_mb,
                             "results_count": len(sr.retrieved_ids),
-                            "avg_distance": sum(sr.distances) / len(sr.distances) if sr.distances else 0.0
+                            "avg_distance": sum(sr.distances) / len(sr.distances)
+                            if sr.distances
+                            else 0.0,
                         }
                         for sr in result.search_results
                     ],
-                    
                     "recall_at_1": result.accuracy.recall_at_1,
                     "recall_at_5": result.accuracy.recall_at_5,
                     "recall_at_10": result.accuracy.recall_at_10,
                     "mean_reciprocal_rank": result.accuracy.mean_reciprocal_rank,
-                    
-                    "total_experiment_time_ms": result.insert_metrics.query_time_ms + result.index_metrics.query_time_ms + sum(sr.metrics.query_time_ms for sr in result.search_results),
-                    "queries_per_second_overall": len(result.search_results) / (sum(sr.metrics.query_time_ms for sr in result.search_results) / 1000.0) if result.search_results and sum(sr.metrics.query_time_ms for sr in result.search_results) > 0 else 0.0
+                    "total_experiment_time_ms": result.insert_metrics.query_time_ms
+                    + result.index_metrics.query_time_ms
+                    + sum(sr.metrics.query_time_ms for sr in result.search_results),
+                    "queries_per_second_overall": len(result.search_results)
+                    / (
+                        sum(sr.metrics.query_time_ms for sr in result.search_results)
+                        / 1000.0
+                    )
+                    if result.search_results
+                    and sum(sr.metrics.query_time_ms for sr in result.search_results)
+                    > 0
+                    else 0.0,
                 }
-                
+
                 analysis_data["experiments"].append(experiment_data)
-            
+
             output_file = Path(output_path)
             output_file.parent.mkdir(parents=True, exist_ok=True)
-            
-            with open(output_file, 'w', encoding='utf-8') as f:
+
+            with open(output_file, "w", encoding="utf-8") as f:
                 json.dump(analysis_data, f, indent=2, ensure_ascii=False)
-            
-            print(f"📊 Exported {len(results)} experiments for analysis to {output_file}")
+
+            print(
+                f"📊 Exported {len(results)} experiments for analysis to {output_file}"
+            )
             return str(output_file)
-        
+
         class ExportAnalysisDataIO(IO[str]):
             def run(self) -> str:
                 return _export_analysis()
-        
+
         return ExportAnalysisDataIO()
 
-    def load_results_for_analysis(self, checkpoint_dir: str) -> IO[List[ExperimentResult]]:
+    def load_results_for_analysis(
+        self, checkpoint_dir: str
+    ) -> IO[List[ExperimentResult]]:
         """Load experiment results optimized for analysis pipeline.
-        
+
         Args:
             checkpoint_dir: Directory containing checkpoint files
-            
+
         Returns:
             IO[List[ExperimentResult]]: Loaded experiment results
         """
+
         def _load_for_analysis() -> List[ExperimentResult]:
             if checkpoint_dir != str(self.checkpoint_dir):
                 temp_manager = CheckpointManager(Path(checkpoint_dir))
                 results = temp_manager.load_all_results()
             else:
                 results = self.load_all_results()
-            
+
             if not results:
                 print(f"⚠️  No experiment results found in {checkpoint_dir}")
                 return []
-            
+
             sorted_results = sorted(results, key=lambda r: r.timestamp)
-            
+
             print(f"📊 Loaded {len(sorted_results)} experiment results for analysis")
-            
+
             dimensions = set(int(r.config.dimension) for r in sorted_results)
             scales = set(r.config.data_scale.name for r in sorted_results)
             search_types = set(r.config.search_type.value for r in sorted_results)
-            
+
             print(f"   • Dimensions: {sorted(dimensions)}")
             print(f"   • Data scales: {sorted(scales)}")
             print(f"   • Search types: {sorted(search_types)}")
-            print(f"   • Time range: {sorted_results[0].timestamp.strftime('%Y-%m-%d %H:%M')} to {sorted_results[-1].timestamp.strftime('%Y-%m-%d %H:%M')}")
-            
+            print(
+                f"   • Time range: {sorted_results[0].timestamp.strftime('%Y-%m-%d %H:%M')} to {sorted_results[-1].timestamp.strftime('%Y-%m-%d %H:%M')}"
+            )
+
             return sorted_results
-        
+
         class LoadResultsForAnalysisIO(IO[List[ExperimentResult]]):
             def run(self) -> List[ExperimentResult]:
                 return _load_for_analysis()
-        
+
         return LoadResultsForAnalysisIO()
 
     def _update_progress_tracking(self, new_results: List[ExperimentResult]) -> None:

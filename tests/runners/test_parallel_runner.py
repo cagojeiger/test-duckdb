@@ -3,11 +3,8 @@ Unit tests for the Parallel Experiment Runner
 Tests the ParallelExperimentRunner class and parallel execution functionality
 """
 
-import time
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from concurrent.futures import Future
-from pathlib import Path
-import tempfile
 from datetime import datetime
 
 import pytest

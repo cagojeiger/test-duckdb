@@ -47,14 +47,14 @@ class ExperimentRunner:
         self.checkpoint_dir = checkpoint_dir
         self.dashboard = dashboard
         self.checkpoint_manager = CheckpointManager(checkpoint_dir)
-        
+
         dashboard_callback = None
         if self.dashboard:
             dashboard_callback = self.dashboard.update_resources
-            
+
         self.resource_monitor = ResourceMonitor(
             memory_threshold_mb=memory_threshold_mb,
-            dashboard_callback=dashboard_callback
+            dashboard_callback=dashboard_callback,
         )
         self.enable_parallel = enable_parallel
 
@@ -236,7 +236,7 @@ class ExperimentRunner:
             )
             parallel_result = parallel_io.run()
 
-            print(f"  ✅ Parallel execution completed:")
+            print("  ✅ Parallel execution completed:")
             print(f"     Successful: {len(parallel_result.results)}")
             print(f"     Failed: {len(parallel_result.failed_configs)}")
             print(f"     Execution time: {parallel_result.execution_time_seconds:.1f}s")
@@ -436,7 +436,7 @@ Examples:
     parser.add_argument(
         "--dashboard",
         action="store_true",
-        help="Enable terminal-based real-time dashboard for monitoring"
+        help="Enable terminal-based real-time dashboard for monitoring",
     )
 
     parser.add_argument(
@@ -467,6 +467,7 @@ def main() -> int:
     dashboard = None
     if args.dashboard:
         from src.dashboard.terminal import TerminalDashboard
+
         dashboard = TerminalDashboard()
         dashboard.start()
 
