@@ -193,7 +193,7 @@ def generate_visualizations(
 
         if trends:
             trends_io = create_trend_charts(trends)
-            trend_paths = trends_io.run()
+            trend_paths: List[str] = trends_io.run()
             visualization_paths["trends"] = trend_paths
 
         dashboard_io = export_interactive_dashboard(analysis, trends)
