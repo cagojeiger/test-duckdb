@@ -5,7 +5,7 @@ DuckDB VSS benchmarking results with interactive charts and live updates.
 """
 
 from __future__ import annotations
-from typing import List, Dict, Any, Dict, Any
+from typing import List, Dict, Any
 import json
 from datetime import datetime
 
@@ -95,7 +95,7 @@ def create_dashboard_app(results: List[ExperimentResult]) -> FastAPI:
             accuracy_comparison = compare_accuracy_metrics(results)
 
             analysis_cache["performance_analysis"] = performance_analysis
-            analysis_cache["trend_analysis"] = trend_analysis  
+            analysis_cache["trend_analysis"] = trend_analysis
             analysis_cache["search_comparison"] = search_comparison
             analysis_cache["accuracy_comparison"] = accuracy_comparison
             analysis_cache["last_updated"] = datetime.now().isoformat()
