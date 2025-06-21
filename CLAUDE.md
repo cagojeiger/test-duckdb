@@ -64,11 +64,11 @@ python -m pytest tests/pure/ -v  # Test only pure functions
 ### DuckDB VSS Operations
 ```sql
 -- Create HNSW index
-CREATE INDEX idx_name ON table_name USING HNSW(vector_column) 
+CREATE INDEX idx_name ON table_name USING HNSW(vector_column)
 WITH (ef_construction = 128, ef_search = 64, M = 16, metric = 'cosine');
 
 -- Vector similarity search
-SELECT * FROM table_name 
+SELECT * FROM table_name
 ORDER BY array_distance(vector_column, query_vector::FLOAT[n])
 LIMIT k;
 ```

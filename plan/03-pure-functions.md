@@ -119,11 +119,11 @@ def calculate_recall_at_k(
     """Recall@K 계산"""
     if not relevant:
         return 0.0
-    
+
     retrieved_k = set(retrieved[:k])
     relevant_set = set(relevant)
     intersection = retrieved_k & relevant_set
-    
+
     return len(intersection) / len(relevant_set)
 
 def calculate_mrr(
@@ -145,16 +145,16 @@ def aggregate_search_metrics(
     recalls_5 = []
     recalls_10 = []
     mrrs = []
-    
+
     for result in results:
         relevant = ground_truth.get(result.query_id, [])
         retrieved = result.retrieved_ids
-        
+
         recalls_1.append(calculate_recall_at_k(retrieved, relevant, 1))
         recalls_5.append(calculate_recall_at_k(retrieved, relevant, 5))
         recalls_10.append(calculate_recall_at_k(retrieved, relevant, 10))
         mrrs.append(calculate_mrr(retrieved, relevant))
-    
+
     return AccuracyMetrics(
         recall_at_1=sum(recalls_1) / len(recalls_1),
         recall_at_5=sum(recalls_5) / len(recalls_5),
@@ -169,7 +169,7 @@ def aggregate_search_metrics(
 def generate_experiment_configs() -> List[ExperimentConfig]:
     """48가지 실험 조합 생성"""
     configs = []
-    
+
     for data_scale in DataScale:
         for dimension in [128, 256, 512, 1024]:
             for search_type in SearchType:
@@ -179,7 +179,7 @@ def generate_experiment_configs() -> List[ExperimentConfig]:
                         category=Category.NEWS if use_filter else None,
                         date_range=None
                     )
-                    
+
                     config = ExperimentConfig(
                         data_scale=data_scale,
                         dimension=Dimension(dimension),
@@ -188,7 +188,7 @@ def generate_experiment_configs() -> List[ExperimentConfig]:
                         hnsw_params=HNSWParams()
                     )
                     configs.append(config)
-    
+
     return configs
 
 def partition_experiments(
@@ -198,12 +198,12 @@ def partition_experiments(
     """실험을 균등하게 분할 (병렬 처리용)"""
     partition_size = len(configs) // num_partitions
     partitions = []
-    
+
     for i in range(num_partitions):
         start = i * partition_size
         end = start + partition_size if i < num_partitions - 1 else len(configs)
         partitions.append(configs[start:end])
-    
+
     return partitions
 ```
 
@@ -224,7 +224,7 @@ def calculate_percentile(
     """백분위수 계산"""
     if not values:
         return 0.0
-    
+
     sorted_values = sorted(values)
     index = int(len(sorted_values) * percentile / 100)
     return sorted_values[min(index, len(sorted_values) - 1)]
@@ -233,11 +233,11 @@ def aggregate_metrics(metrics_list: List[Metrics]) -> Dict[str, float]:
     """메트릭 리스트 집계"""
     if not metrics_list:
         return {}
-    
+
     times = [m.elapsed_time for m in metrics_list]
     memories = [m.memory_used for m in metrics_list]
     cpus = [m.cpu_percent for m in metrics_list]
-    
+
     return {
         "mean_time": sum(times) / len(times),
         "p50_time": calculate_percentile(times, 50),
@@ -291,7 +291,7 @@ def results_to_dataframe(results: List[ExperimentResult]) -> Dict[str, List[Any]
         "recall_at_10": [],
         "throughput": []
     }
-    
+
     for result in results:
         data["data_scale"].append(result.config.data_scale.value)
         data["dimension"].append(result.config.dimension)
@@ -299,12 +299,12 @@ def results_to_dataframe(results: List[ExperimentResult]) -> Dict[str, List[Any]
         data["use_filter"].append(result.config.filter_config.enabled)
         data["insert_time"].append(result.insert_metrics.elapsed_time)
         data["index_time"].append(result.index_metrics.elapsed_time)
-        
+
         search_times = [sr.metrics.elapsed_time for sr in result.search_results]
         data["mean_search_time"].append(sum(search_times) / len(search_times))
         data["recall_at_10"].append(result.accuracy.recall_at_10)
         data["throughput"].append(result.insert_metrics.throughput)
-    
+
     return data
 ```
 

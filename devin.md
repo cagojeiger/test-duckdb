@@ -51,7 +51,7 @@ This is a **Python-based benchmarking platform** for systematically analyzing th
 
 ### HNSW Index Parameters
 ```sql
-CREATE INDEX idx_name ON table_name USING HNSW(vector_column) 
+CREATE INDEX idx_name ON table_name USING HNSW(vector_column)
 WITH (
     ef_construction = 128,  -- Candidate vertices during index construction
     ef_search = 64,         -- Candidate vertices during search

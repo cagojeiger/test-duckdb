@@ -22,7 +22,7 @@ class Vector:
     """불변 벡터 표현"""
     dimension: Dimension
     data: VectorData
-    
+
     def __post_init__(self):
         assert len(self.data) == self.dimension
 ```
@@ -149,11 +149,11 @@ class IO(Generic[T], ABC):
     def run(self) -> T:
         """실제 효과 실행"""
         pass
-    
+
     def map(self, f: Callable[[T], U]) -> 'IO[U]':
         """결과 변환"""
         return MappedIO(self, f)
-    
+
     def flat_map(self, f: Callable[[T], 'IO[U]']) -> 'IO[U]':
         """효과 체이닝"""
         return FlatMappedIO(self, f)
@@ -190,10 +190,10 @@ class EitherOps:
 class Reader(Generic[R, T]):
     """설정 의존성을 캡슐화하는 Reader 모나드"""
     run: Callable[[R], T]
-    
+
     def map(self, f: Callable[[T], U]) -> 'Reader[R, U]':
         return Reader(lambda r: f(self.run(r)))
-    
+
     def flat_map(self, f: Callable[[T], 'Reader[R, U]']) -> 'Reader[R, U]':
         return Reader(lambda r: f(self.run(r)).run(r))
 ```
@@ -207,7 +207,7 @@ class Reader(Generic[R, T]):
 class Pipeline(Generic[A, B]):
     """함수 파이프라인"""
     steps: List[Callable[[Any], Any]]
-    
+
     def run(self, input: A) -> B:
         result = input
         for step in self.steps:
@@ -223,7 +223,7 @@ class Batch(Generic[T]):
     """배치 처리를 위한 컨테이너"""
     items: List[T]
     size: int
-    
+
     def map(self, f: Callable[[T], U]) -> 'Batch[U]':
         return Batch([f(item) for item in self.items], self.size)
 ```

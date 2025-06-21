@@ -57,7 +57,7 @@ class ImmutableConfig:
     dimension: int
     batch_size: int
     parameters: Tuple[str, ...] = field(default_factory=tuple)
-    
+
     def with_dimension(self, new_dimension: int) -> 'ImmutableConfig':
         """새로운 차원으로 복사본 생성"""
         return replace(self, dimension=new_dimension)
@@ -129,17 +129,17 @@ U = TypeVar('U')
 
 class Monad(Generic[T], ABC):
     """모나드 베이스 클래스"""
-    
+
     @abstractmethod
     def bind(self, f: Callable[[T], 'Monad[U]']) -> 'Monad[U]':
         """모나드 바인드 (flatMap)"""
         pass
-    
+
     @abstractmethod
     def map(self, f: Callable[[T], U]) -> 'Monad[U]':
         """펑터 맵"""
         pass
-    
+
     @classmethod
     @abstractmethod
     def pure(cls, value: T) -> 'Monad[T]':
@@ -149,24 +149,24 @@ class Monad(Generic[T], ABC):
 # Maybe 모나드 구현
 class Maybe(Monad[T]):
     """옵셔널 값을 다루는 Maybe 모나드"""
-    
+
     def __init__(self, value: Optional[T]):
         self._value = value
-    
+
     def bind(self, f: Callable[[T], 'Maybe[U]']) -> 'Maybe[U]':
         if self._value is None:
             return Maybe(None)
         return f(self._value)
-    
+
     def map(self, f: Callable[[T], U]) -> 'Maybe[U]':
         if self._value is None:
             return Maybe(None)
         return Maybe(f(self._value))
-    
+
     @classmethod
     def pure(cls, value: T) -> 'Maybe[T]':
         return cls(value)
-    
+
     def get_or_else(self, default: T) -> T:
         return self._value if self._value is not None else default
 
@@ -192,34 +192,34 @@ T = TypeVar('T')  # Success type
 
 class Result(Generic[E, T]):
     """성공 또는 실패를 나타내는 Result 타입"""
-    
+
     def __init__(self, value: Union[E, T], is_error: bool):
         self._value = value
         self._is_error = is_error
-    
+
     @classmethod
     def success(cls, value: T) -> 'Result[E, T]':
         return cls(value, False)
-    
+
     @classmethod
     def error(cls, error: E) -> 'Result[E, T]':
         return cls(error, True)
-    
+
     def map(self, f: Callable[[T], U]) -> 'Result[E, U]':
         if self._is_error:
             return Result.error(self._value)
         return Result.success(f(self._value))
-    
+
     def flat_map(self, f: Callable[[T], 'Result[E, U]']) -> 'Result[E, U]':
         if self._is_error:
             return Result.error(self._value)
         return f(self._value)
-    
+
     def map_error(self, f: Callable[[E], F]) -> 'Result[F, T]':
         if self._is_error:
             return Result.error(f(self._value))
         return Result.success(self._value)
-    
+
     def unwrap_or(self, default: T) -> T:
         return default if self._is_error else self._value
 
@@ -245,23 +245,23 @@ T = TypeVar('T')
 
 class Lazy(Generic[T]):
     """지연 평가를 위한 Lazy 컨테이너"""
-    
+
     def __init__(self, computation: Callable[[], T]):
         self._computation = computation
         self._value = None
         self._computed = False
-    
+
     def get(self) -> T:
         """값을 계산하고 캐싱"""
         if not self._computed:
             self._value = self._computation()
             self._computed = True
         return self._value
-    
+
     def map(self, f: Callable[[T], U]) -> 'Lazy[U]':
         """지연 맵핑"""
         return Lazy(lambda: f(self.get()))
-    
+
     def flat_map(self, f: Callable[[T], 'Lazy[U]']) -> 'Lazy[U]':
         """지연 바인드"""
         return Lazy(lambda: f(self.get()).get())
@@ -276,7 +276,7 @@ def lazy_range(start: int = 0) -> Lazy[List[int]]:
             result.append(current)
             current += 1
         return result
-    
+
     return Lazy(lambda: generate)
 
 # 사용 예시
@@ -298,8 +298,8 @@ def filter_by_category(category: str, documents: List[Document]) -> List[Documen
     return [doc for doc in documents if doc.content.category.value == category]
 
 def sort_by_date(reverse: bool, documents: List[Document]) -> List[Document]:
-    return sorted(documents, 
-                  key=lambda d: d.content.created_at, 
+    return sorted(documents,
+                  key=lambda d: d.content.created_at,
                   reverse=reverse)
 
 def limit_results(n: int, documents: List[Document]) -> List[Document]:
@@ -332,22 +332,22 @@ def memoize_to_disk(cache_dir: Path):
             key_data = json.dumps((args, kwargs), sort_keys=True)
             key = hashlib.md5(key_data.encode()).hexdigest()
             cache_file = cache_dir / f"{func.__name__}_{key}.json"
-            
+
             # 캐시 확인
             if cache_file.exists():
                 with open(cache_file, 'r') as f:
                     return json.load(f)
-            
+
             # 계산 실행
             result = func(*args, **kwargs)
-            
+
             # 캐시 저장
             cache_dir.mkdir(parents=True, exist_ok=True)
             with open(cache_file, 'w') as f:
                 json.dump(result, f)
-            
+
             return result
-        
+
         return wrapper
     return decorator
 
@@ -377,9 +377,9 @@ def parallel_map(
     """병렬 맵 구현"""
     if max_workers is None:
         max_workers = multiprocessing.cpu_count()
-    
+
     Executor = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
-    
+
     with Executor(max_workers=max_workers) as executor:
         # 순서 보장
         return list(executor.map(func, items))
@@ -436,7 +436,7 @@ def with_temp_db(func: Callable[[duckdb.DuckDBPyConnection], T]) -> T:
     ) as conn:
         return func(conn)
 
-result = with_temp_db(lambda conn: 
+result = with_temp_db(lambda conn:
     conn.execute("SELECT 1").fetchone()[0]
 )
 ```
@@ -467,10 +467,10 @@ def find_min(items: List[T]) -> Optional[T]:
 class Box(Generic[T]):
     """제네릭 박스 컨테이너"""
     value: T
-    
+
     def map(self, f: Callable[[T], U]) -> 'Box[U]':
         return Box(f(self.value))
-    
+
     def flat_map(self, f: Callable[[T], 'Box[U]']) -> 'Box[U]':
         return f(self.value)
 ```
@@ -526,17 +526,17 @@ def batch_vector_search(
 ) -> List[List[int]]:
     """배치 벡터 검색"""
     query_matrix = np.array(queries)
-    
+
     # 모든 쿼리에 대한 거리 계산
     distances = 1.0 - np.dot(database, query_matrix.T)
-    
+
     # 각 쿼리별 top-k 인덱스
     results = []
     for i in range(len(queries)):
         top_k_indices = np.argpartition(distances[:, i], k)[:k]
         top_k_indices = top_k_indices[np.argsort(distances[top_k_indices, i])]
         results.append(top_k_indices.tolist())
-    
+
     return results
 ```
 

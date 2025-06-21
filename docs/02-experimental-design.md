@@ -8,7 +8,7 @@ Python 기반 DuckDB VSS 확장을 활용한 텍스트 벡터 검색의 성능 �
 
 ### 1. 데이터 크기 (3가지)
 - **소규모**: 10,000 벡터 (~40MB)
-- **중규모**: 100,000 벡터 (~400MB) 
+- **중규모**: 100,000 벡터 (~400MB)
 - **대규모**: 250,000 벡터 (~1GB)
 
 *각 벡터를 1024차원 FLOAT32 기준으로 계산 (1024 × 4바이트 = 4KB/벡터)*
@@ -46,14 +46,14 @@ Python 기반 DuckDB VSS 확장을 활용한 텍스트 벡터 검색의 성능 �
 - **측정 방법**: `CREATE INDEX` 실행 시간
 
 ### 3. 벡터 검색 성능
-- **측정 지표**: 
+- **측정 지표**:
   - 쿼리 응답 시간 (ms)
   - 처리량 (QPS - Queries Per Second)
   - 정확도 (Recall@K, K=1,5,10)
 - **검색 패턴**: Top-K 검색 (K=1,5,10,50)
 
 ### 4. 하이브리드 검색 성능 (벡터 + BM25)
-- **측정 지표**: 
+- **측정 지표**:
   - 하이브리드 쿼리 응답 시간
   - 순수 벡터 검색 대비 성능 비교
   - 검색 품질 향상도
@@ -155,15 +155,15 @@ def generate_text_embedding(text: str, dimension: int) -> List[float]:
 -- 벡터 검색 결과와 BM25 결과 조합
 WITH vector_results AS (
     SELECT id, text, array_distance(embedding, query_vector) as vector_score
-    FROM documents 
+    FROM documents
     ORDER BY vector_score LIMIT 100
 ),
 text_results AS (
-    SELECT id, text, fts_score 
-    FROM documents 
+    SELECT id, text, fts_score
+    FROM documents
     WHERE text MATCH 'query_text'
 )
-SELECT v.id, v.text, 
+SELECT v.id, v.text,
        (0.7 * (1 - v.vector_score)) + (0.3 * t.fts_score) as hybrid_score
 FROM vector_results v
 JOIN text_results t ON v.id = t.id
