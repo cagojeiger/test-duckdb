@@ -317,93 +317,42 @@ for i in range(20000):
 - 인덱스 효율성
 - 검색 정확도
 
-## 구현 아키텍처 제안
+## 벤치마킹 실험 준비사항
 
-### 프로젝트 구조
-```
-src/
-├── data_generation/          # Faker 기반 데이터 생성
-│   ├── __init__.py
-│   ├── text_embeddings.py    # 텍스트 임베딩 데이터 생성
-│   ├── image_features.py     # 이미지 특징 벡터 생성
-│   ├── recommendation_vectors.py  # 추천 시스템 벡터 생성
-│   └── base_generator.py     # 공통 생성 로직
-├── benchmarks/               # 성능 측정 및 분석
-│   ├── __init__.py
-│   ├── performance_metrics.py  # 성능 지표 수집
-│   ├── query_executor.py     # 쿼리 실행 엔진
-│   ├── result_analyzer.py    # 결과 분석 및 시각화
-│   └── benchmark_runner.py   # 벤치마크 실행 관리
-├── scenarios/                # 벡터 검색 시나리오
-│   ├── __init__.py
-│   ├── text_similarity.py    # 텍스트 유사도 검색
-│   ├── image_matching.py     # 이미지 매칭
-│   ├── recommendation.py     # 추천 시스템
-│   └── base_scenario.py      # 시나리오 기본 클래스
-├── utils/                    # DuckDB 관리 유틸리티
-│   ├── __init__.py
-│   ├── duckdb_manager.py     # DuckDB 연결 및 관리
-│   ├── vector_operations.py  # 벡터 연산 헬퍼
-│   └── config.py            # 설정 관리
-├── tests/                    # 테스트 코드
-│   ├── __init__.py
-│   ├── test_data_generation.py
-│   ├── test_benchmarks.py
-│   └── test_scenarios.py
-└── main.py                   # 메인 실행 스크립트
+### DuckDB VSS 확장 설정
+```sql
+-- VSS 확장 설치 및 로드
+INSTALL vss;
+LOAD vss;
+
+-- 텍스트 벡터 테이블 생성 예시
+CREATE TABLE text_vectors (
+    id INTEGER PRIMARY KEY,
+    text TEXT,
+    embedding FLOAT[512],
+    category VARCHAR,
+    created_at TIMESTAMP
+);
+
+-- HNSW 인덱스 생성
+CREATE INDEX text_hnsw_idx ON text_vectors USING HNSW(embedding) 
+WITH (metric = 'cosine', ef_construction = 128, M = 16);
 ```
 
-### 핵심 컴포넌트
+### 성능 측정 기본 쿼리
+```sql
+-- 벡터 유사도 검색 (기본)
+SELECT id, text, array_cosine_distance(embedding, ?::FLOAT[512]) as distance
+FROM text_vectors 
+ORDER BY distance 
+LIMIT 10;
 
-#### 1. DuckDB 관리자
-```python
-class DuckDBManager:
-    def __init__(self, db_path=None):
-        self.conn = duckdb.connect(db_path)
-        self._setup_vss_extension()
-    
-    def _setup_vss_extension(self):
-        self.conn.execute("INSTALL vss")
-        self.conn.execute("LOAD vss")
-    
-    def create_vector_table(self, table_name, vector_dim):
-        # 벡터 테이블 생성 로직
-        pass
-    
-    def create_hnsw_index(self, table_name, column_name, **params):
-        # HNSW 인덱스 생성 로직
-        pass
-```
-
-#### 2. 벤치마크 실행기
-```python
-class BenchmarkRunner:
-    def __init__(self, db_manager):
-        self.db_manager = db_manager
-        self.metrics = PerformanceMetrics()
-    
-    def run_scenario_benchmark(self, scenario, data_sizes, vector_dims):
-        # 시나리오별 벤치마크 실행
-        pass
-    
-    def measure_query_performance(self, query, iterations=100):
-        # 쿼리 성능 측정
-        pass
-```
-
-#### 3. 데이터 생성기
-```python
-class VectorDataGenerator:
-    def __init__(self, locale='ko_KR'):
-        self.fake = Faker(locale)
-    
-    def generate_text_embeddings(self, count, dim):
-        # 텍스트 임베딩 데이터 생성
-        pass
-    
-    def generate_image_features(self, count, dim):
-        # 이미지 특징 벡터 생성
-        pass
+-- 필터링 조건부 검색
+SELECT id, text, array_cosine_distance(embedding, ?::FLOAT[512]) as distance
+FROM text_vectors 
+WHERE category = '뉴스'
+ORDER BY distance 
+LIMIT 10;
 ```
 
 ## 성능 최적화 권장사항
@@ -442,37 +391,22 @@ class VectorDataGenerator:
 - 메모리 기반 인덱스로 확장성 제한
 - 실시간 업데이트 성능 이슈
 
-## 다음 단계 및 구현 로드맵
+## 실험 실행 계획
 
-### 1단계: 환경 설정 및 기본 구조
-- Python 환경 설정 (DuckDB, Faker, NumPy, Pandas)
-- 프로젝트 구조 생성
-- DuckDB VSS 확장 설정 확인
+### Phase 1: 기본 성능 측정 (1-2주)
+- 소규모 데이터 (10K 벡터) 전체 48개 조합 테스트
+- 기본 HNSW 파라미터 최적화
+- 벡터 차원별 성능 특성 파악
 
-### 2단계: 데이터 생성 모듈 구현
-- Faker 기반 다양한 시나리오 데이터 생성기 구현
-- 벡터 임베딩 시뮬레이션 로직 개발
-- 데이터 검증 및 품질 확인
+### Phase 2: 확장성 테스트 (2-3주)
+- 중규모/대규모 데이터 성능 측정
+- 메모리 사용량 모니터링
+- 병목 지점 식별 및 최적화
 
-### 3단계: 벤치마킹 프레임워크 구현
-- 성능 측정 도구 개발
-- 다양한 시나리오별 테스트 케이스 구현
-- 결과 분석 및 시각화 도구 개발
-
-### 4단계: 시나리오별 구현 및 테스트
-- 텍스트 유사도 검색 시나리오 구현
-- 이미지 매칭 시나리오 구현
-- 추천 시스템 시나리오 구현
-
-### 5단계: 성능 최적화 및 분석
-- HNSW 파라미터 튜닝
-- 쿼리 최적화
-- 대용량 데이터 처리 최적화
-
-### 6단계: 문서화 및 보고서 작성
-- 벤치마크 결과 분석 보고서
-- 사용 가이드 및 모범 사례 문서
-- 성능 비교 및 권장사항 정리
+### Phase 3: 고급 기능 테스트 (1-2주)
+- 하이브리드 검색 (벡터 + BM25) 구현 및 성능 측정
+- 필터링 검색 최적화
+- 실시간 업데이트 성능 테스트
 
 ## 결론
 
