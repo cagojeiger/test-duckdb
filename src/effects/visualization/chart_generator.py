@@ -165,7 +165,8 @@ def create_trend_charts(
             if "query_time_ms" in trends.scale_trends:
                 scale_data = trends.scale_trends["query_time_ms"]
                 if scale_data:
-                    scales, values = zip(*scale_data)
+                    scales_tuple, values_tuple = zip(*scale_data)
+                    scales, values = list(scales_tuple), list(values_tuple)
                     axes[0].scatter(scales, values, alpha=0.6, s=50)
                     axes[0].set_title("Query Time vs Data Scale")
                     axes[0].set_ylabel("Query Time (ms)")
@@ -175,7 +176,8 @@ def create_trend_charts(
             if "throughput_qps" in trends.scale_trends:
                 scale_data = trends.scale_trends["throughput_qps"]
                 if scale_data:
-                    scales, values = zip(*scale_data)
+                    scales_tuple, values_tuple = zip(*scale_data)
+                    scales, values = list(scales_tuple), list(values_tuple)
                     axes[1].scatter(scales, values, alpha=0.6, s=50, color="green")
                     axes[1].set_title("Throughput vs Data Scale")
                     axes[1].set_ylabel("Throughput (QPS)")
@@ -195,7 +197,8 @@ def create_trend_charts(
             if "query_time_ms" in trends.dimension_trends:
                 dim_data = trends.dimension_trends["query_time_ms"]
                 if dim_data:
-                    dimensions, values = zip(*dim_data)
+                    dimensions_tuple, values_tuple = zip(*dim_data)
+                    dimensions, values = list(dimensions_tuple), list(values_tuple)
                     axes[0].scatter(dimensions, values, alpha=0.6, s=50)
                     axes[0].set_title("Query Time vs Vector Dimension")
                     axes[0].set_ylabel("Query Time (ms)")
@@ -204,7 +207,8 @@ def create_trend_charts(
             if "throughput_qps" in trends.dimension_trends:
                 dim_data = trends.dimension_trends["throughput_qps"]
                 if dim_data:
-                    dimensions, values = zip(*dim_data)
+                    dimensions_tuple, values_tuple = zip(*dim_data)
+                    dimensions, values = list(dimensions_tuple), list(values_tuple)
                     axes[1].scatter(dimensions, values, alpha=0.6, s=50, color="green")
                     axes[1].set_title("Throughput vs Vector Dimension")
                     axes[1].set_ylabel("Throughput (QPS)")
