@@ -241,9 +241,9 @@ class TestParallelExperimentRunner:
         mock_executor_class.return_value.__enter__.return_value = mock_executor
 
         mock_futures = []
-        for i, result in enumerate(mock_results):
+        for i, mock_result in enumerate(mock_results):
             mock_future = Mock(spec=Future)
-            mock_future.result.return_value = result
+            mock_future.result.return_value = mock_result
             mock_futures.append(mock_future)
 
         mock_executor.submit.side_effect = mock_futures
