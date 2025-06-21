@@ -96,7 +96,7 @@ WITH vector_results AS (
     ORDER BY v_score LIMIT 100
 ),
 text_results AS (
-    SELECT id, fts_main_table.match_bm25(id, ?) as t_score  
+    SELECT id, fts_main_table.match_bm25(id, ?) as t_score
     FROM table_name
     WHERE text LIKE '%' || ? || '%'
 )

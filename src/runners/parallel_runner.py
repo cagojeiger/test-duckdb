@@ -7,8 +7,7 @@ Implements concurrent experiment execution with process isolation and resource m
 import time
 import psutil
 from concurrent.futures import ProcessPoolExecutor, as_completed, Future
-from typing import List, Optional, Dict, Any, Callable
-from pathlib import Path
+from typing import List, Optional, Dict, Callable
 from dataclasses import dataclass
 
 from src.types.core import ExperimentConfig, ExperimentResult
@@ -153,7 +152,7 @@ class ParallelExperimentRunner:
             ]
             total_batches = len(batches)
 
-            print(f"🚀 Starting batched parallel execution")
+            print("🚀 Starting batched parallel execution")
             print(
                 f"📊 Processing {len(configs)} experiments in {total_batches} batches"
             )
@@ -222,7 +221,7 @@ class ParallelExperimentRunner:
 
             optimal_workers = max(optimal_workers, self.config.min_workers)
 
-            print(f"💡 Resource analysis:")
+            print("💡 Resource analysis:")
             print(f"   Available memory: {available_memory_mb:.0f}MB")
             print(f"   CPU cores: {cpu_count}")
             print(f"   Memory-based workers: {memory_based_workers}")

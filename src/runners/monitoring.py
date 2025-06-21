@@ -28,10 +28,10 @@ class ResourceMonitor:
     """Monitors system resources during experiment execution"""
 
     def __init__(
-        self, 
-        memory_threshold_mb: float = 7000, 
+        self,
+        memory_threshold_mb: float = 7000,
         monitoring_interval: float = 5.0,
-        dashboard_callback: Optional[Callable[[ResourceSnapshot], None]] = None
+        dashboard_callback: Optional[Callable[[ResourceSnapshot], None]] = None,
     ):
         self.memory_threshold_mb = memory_threshold_mb
         self.monitoring_interval = monitoring_interval

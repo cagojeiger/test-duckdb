@@ -384,7 +384,7 @@ def calculate_parallel_efficiency(
     """병렬 실행 효율성 계산"""
     speedup = sequential_time / parallel_time if parallel_time > 0 else 0
     efficiency = speedup / worker_count if worker_count > 0 else 0
-    
+
     return {
         "speedup": speedup,
         "efficiency": efficiency,

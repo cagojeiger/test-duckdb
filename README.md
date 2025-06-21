@@ -199,7 +199,7 @@ cat analysis/performance_analysis.json | jq '.search_type_performance'
 
 #### 성능 메트릭 이해
 - **삽입 성능**: `vectors_per_second` (높을수록 좋음)
-- **검색 속도**: `query_time_ms` (낮을수록 좋음)  
+- **검색 속도**: `query_time_ms` (낮을수록 좋음)
 - **검색 정확도**: `recall_at_k` (높을수록 좋음, 0-1 범위)
 - **메모리 사용량**: `memory_usage_mb`
 
@@ -316,7 +316,7 @@ uv run python -m src.runners.experiment_runner \
 
 ### 🤝 기여하기
 
-이 프로젝트는 DuckDB 벡터 검색 성능에 대한 체계적인 연구를 목표로 합니다. 
+이 프로젝트는 DuckDB 벡터 검색 성능에 대한 체계적인 연구를 목표로 합니다.
 
 **기여 방법:**
 - 새로운 실험 시나리오 제안
