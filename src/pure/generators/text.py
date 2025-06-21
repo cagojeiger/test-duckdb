@@ -140,6 +140,28 @@ def create_text_content(
     )
 
 
+def generate_korean_texts(count: int, seed: int) -> List[TextContent]:
+    """다수의 한국어 텍스트 콘텐츠 생성"""
+    rng = random.Random(seed)
+    texts = []
+
+    categories = list(Category)
+    start_date = datetime(2023, 1, 1)
+    end_date = datetime(2024, 12, 31)
+
+    timestamps = generate_timestamps(seed, count, start_date, end_date)
+
+    for i in range(count):
+        category = rng.choice(categories)
+        timestamp = timestamps[i]
+        text_seed = seed + i
+
+        text_content = create_text_content(text_seed, category, timestamp)
+        texts.append(text_content)
+
+    return texts
+
+
 def generate_timestamps(
     seed: int, count: int, start_date: datetime, end_date: datetime
 ) -> List[datetime]:

@@ -44,6 +44,17 @@ def generate_vector(
     return Vector(dimension, VectorData(normalized))
 
 
+def generate_random_vectors(
+    count: int, dimension: Dimension, seed: int, distribution: str = "normal"
+) -> List[Vector]:
+    """다수의 랜덤 벡터 생성"""
+    vectors = []
+    for i in range(count):
+        vector = generate_vector(seed + i, dimension, distribution)
+        vectors.append(vector)
+    return vectors
+
+
 def generate_query_vectors(
     seed: int, dimension: Dimension, count: int, distribution: str = "normal"
 ) -> List[Vector]:
