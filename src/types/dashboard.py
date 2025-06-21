@@ -5,7 +5,7 @@ Immutable data structures for dashboard state management
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Any
 from ..types.core import ExperimentResult
 from ..runners.monitoring import ResourceSnapshot
 
@@ -77,7 +77,7 @@ class DashboardUpdate:
     """Represents a dashboard update operation"""
 
     update_type: str
-    data: dict
+    data: dict[str, Any]
     timestamp: datetime
 
     @classmethod

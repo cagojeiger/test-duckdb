@@ -36,7 +36,7 @@ class DashboardState:
 
     start_time: Optional[datetime] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.recent_results is None:
             object.__setattr__(self, "recent_results", [])
         if self.alerts is None:
@@ -46,7 +46,7 @@ class DashboardState:
 class TerminalDashboard:
     """Terminal-based dashboard for real-time experiment monitoring"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.console = Console()
         self.layout = Layout()
         self.state = DashboardState()
