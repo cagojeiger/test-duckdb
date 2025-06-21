@@ -300,7 +300,7 @@ def compare_accuracy_metrics(
 
     accuracy_comparison = {}
 
-    search_type_accuracy = {}
+    search_type_accuracy: Dict[str, Dict[str, List[float]]] = {}
     for result in results:
         search_type = result.config.search_type.value
         if search_type not in search_type_accuracy:
