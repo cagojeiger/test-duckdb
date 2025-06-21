@@ -307,6 +307,58 @@ python -m src.runners.experiment_runner --data-scale small --dimensions 128 256 
 - ✅ 포괄적인 테스트 스위트 (87개 단위 테스트, 99% 성공률)
 - ✅ 타입 안전성 및 코드 품질 보장
 
+### Phase 4B-2: 터미널 대시보드 (✅ 완료)
+**목표**: 실시간 실험 모니터링을 위한 터미널 기반 대시보드 구현
+
+**핵심 기능:**
+- **Rich 라이브러리 기반 터미널 UI**: 실시간 패널, 진행률 바, 컬러 출력으로 구성된 인터랙티브 대시보드
+- **실시간 모니터링**: 실험 진행률, 리소스 사용량, 성능 메트릭 실시간 업데이트
+- **불변 상태 관리**: 함수형 프로그래밍 패턴을 따른 대시보드 상태 관리
+- **CLI 통합**: `--dashboard` 플래그로 선택적 대시보드 활성화
+
+**구현된 컴포넌트:**
+- `src/dashboard/terminal.py`: Rich 기반 터미널 대시보드 메인 구현체
+  - `TerminalDashboard` 클래스: 대시보드 생명주기 및 레이아웃 관리
+  - 실시간 진행률, 리소스 메트릭, 성능 차트, 알림 패널
+- `src/types/dashboard.py`: 불변 대시보드 상태 및 업데이트 타입 정의
+  - `DashboardState`: 전체 대시보드 상태 관리 (`@dataclass(frozen=True)`)
+  - `DashboardUpdate`: 상태 업데이트 작업 정의
+  - `ExperimentProgress`, `ResourceMetrics`, `PerformanceCharts`: 세부 메트릭 타입
+- `src/effects/dashboard.py`: IO 모나드 기반 대시보드 효과 함수
+  - `update_dashboard_state()`: 순수 함수형 상태 업데이트
+  - `create_*_update_effect()`: 각종 업데이트 효과 생성 함수
+- `tests/dashboard/test_terminal.py`: 포괄적인 대시보드 테스트 스위트 (29개 테스트)
+
+**함수형 프로그래밍 패턴:**
+- **불변 데이터 구조**: 모든 대시보드 상태를 `@dataclass(frozen=True)`로 관리
+- **IO 모나드 통합**: 부수 효과를 명시적으로 처리하는 IO 래퍼 사용
+- **순수 함수 분리**: 비즈니스 로직과 I/O 작업의 명확한 분리
+- **효과 조합**: 함수형 패턴을 사용한 대시보드 업데이트 조합
+
+**CLI 사용법:**
+```bash
+# 모든 실험을 대시보드와 함께 실행
+python -m src.runners.experiment_runner --all --dashboard
+
+# 병렬 실험을 대시보드와 함께 실행
+python -m src.runners.experiment_runner --all --parallel --dashboard
+
+# 특정 실험을 대시보드와 함께 실행
+python -m src.runners.experiment_runner --data-scale small --dimensions 128,256 --dashboard
+```
+
+**대시보드 기능:**
+- **진행률 패널**: 실험 완료 상황 및 현재 실험 세부사항 실시간 표시
+- **리소스 패널**: 메모리 사용량, CPU 사용률, 사용 가능한 메모리 모니터링
+- **결과 패널**: 최근 완료된 실험 결과 및 성능 메트릭 미리보기
+- **알림 패널**: 시스템 알림 및 리소스 압박 경고
+
+**테스트 현황:**
+- **117개 단위 테스트** (기존 87개 + 새로운 29개 대시보드 테스트)
+- **99.1% 성공률** (116/117 테스트 통과)
+- 대시보드 상태 관리, 생명주기, 업데이트 처리, 오류 처리 검증 완료
+- CLI 통합 및 하위 호환성 테스트 통과
+
 ### 앞으로 할 내용 (상세 로드맵)
 
 #### Phase 5: 분석 및 시각화 시스템 (다음 우선순위)
