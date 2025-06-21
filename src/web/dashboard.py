@@ -84,7 +84,7 @@ def create_dashboard_app(results: List[ExperimentResult]) -> FastAPI:
 
     manager = ConnectionManager()
 
-    analysis_cache = {}
+    analysis_cache: Dict[str, Any] = {}
 
     def get_analysis_data() -> Dict[str, Any]:
         """Get cached analysis data or compute it."""

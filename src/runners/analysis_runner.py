@@ -256,7 +256,7 @@ Examples:
     return parser
 
 
-def main():
+def main() -> None:
     """Main entry point"""
     parser = create_cli_parser()
     args = parser.parse_args()
