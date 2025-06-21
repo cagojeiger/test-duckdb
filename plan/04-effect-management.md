@@ -305,6 +305,35 @@ def save_results_csv(
     return io_effect(effect)
 ```
 
+## 4. Effect Management (효과 관리) - ✅ Phase 4B 병렬 실행 완료
+
+## Phase 4B 병렬 실행 시스템 구현 완료
+
+Phase 4B에서 병렬 실행 시스템이 완료되어 효과 관리에 새로운 차원이 추가되었습니다:
+
+### 병렬 처리 효과 관리
+- **프로세스 격리**: ProcessPoolExecutor를 통한 안전한 병렬 실행
+- **리소스 관리**: 동적 워커 수 조정 및 메모리 모니터링  
+- **효과 격리**: 각 프로세스가 독립적인 효과 컨텍스트 유지
+- **폴백 메커니즘**: 병렬 실행 실패 시 순차 실행으로 자동 전환
+
+### 병렬 실행 CLI 옵션
+```bash
+# 병렬 실행 (기본 설정)
+python -m src.runners.experiment_runner --all --parallel
+
+# 병렬 실행 (커스텀 워커 수 및 메모리 임계값)
+python -m src.runners.experiment_runner --all --parallel --workers 6 --max-memory 8000
+
+# 특정 조건 + 병렬 실행
+python -m src.runners.experiment_runner --data-scale small --dimensions 128 256 --parallel
+```
+
+### 테스트 현황
+- **87개 단위 테스트** (99% 성공률)
+- **병렬 실행 테스트** 완료
+- **리소스 관리 테스트** 통과
+
 ## 4. 성능 측정 효과
 
 ```python

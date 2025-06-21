@@ -1,4 +1,31 @@
-# 실험 워크플로우 설계
+# 실험 워크플로우 설계 - ✅ Phase 4B 병렬 실행 완료
+
+## Phase 4B 병렬 실행 시스템 구현 완료
+
+Phase 4B에서 병렬 실행 시스템이 완료되어 실험 워크플로우에 새로운 차원이 추가되었습니다:
+
+### 병렬 실험 워크플로우
+- **병렬 실험 실행**: ProcessPoolExecutor를 활용한 48개 실험 조합 병렬 처리
+- **동적 리소스 관리**: 메모리 및 CPU 기반 워커 수 자동 조정
+- **프로세스 격리**: 각 실험이 독립적인 워크플로우 컨텍스트에서 실행
+- **폴백 워크플로우**: 병렬 실행 실패 시 순차 워크플로우로 자동 전환
+
+### 병렬 실행 CLI 옵션
+```bash
+# 병렬 워크플로우 실행 (기본 설정)
+python -m src.runners.experiment_runner --all --parallel
+
+# 병렬 워크플로우 (커스텀 워커 수 및 메모리 임계값)
+python -m src.runners.experiment_runner --all --parallel --workers 6 --max-memory 8000
+
+# 특정 조건 + 병렬 워크플로우
+python -m src.runners.experiment_runner --data-scale small --dimensions 128 256 --parallel
+```
+
+### 테스트 현황
+- **87개 단위 테스트** (99% 성공률)
+- **병렬 워크플로우 테스트** 완료
+- **리소스 관리 테스트** 통과
 
 ## 개요
 

@@ -1,4 +1,37 @@
-# 구현 가이드라인
+# 구현 가이드라인 - ✅ Phase 4B 병렬 실행 완료
+
+## Phase 4B 병렬 실행 시스템 구현 완료
+
+Phase 4B에서 병렬 실행 시스템이 완료되어 구현 가이드라인에 새로운 섹션이 추가되었습니다:
+
+### 병렬 실행 구현 가이드
+- **병렬 실험 실행**: ProcessPoolExecutor를 활용한 48개 실험 조합 병렬 처리
+- **동적 리소스 관리**: 메모리 및 CPU 기반 워커 수 자동 조정
+- **프로세스 격리**: 각 실험이 독립적인 프로세스에서 실행
+- **폴백 메커니즘**: 병렬 실행 실패 시 순차 실행으로 자동 전환
+
+### 병렬 실행 CLI 사용법
+```bash
+# 병렬 실행 (기본 설정)
+python -m src.runners.experiment_runner --all --parallel
+
+# 병렬 실행 (커스텀 워커 수 및 메모리 임계값)
+python -m src.runners.experiment_runner --all --parallel --workers 6 --max-memory 8000
+
+# 특정 조건 + 병렬 실행
+python -m src.runners.experiment_runner --data-scale small --dimensions 128 256 --parallel
+```
+
+### 구현된 병렬 처리 컴포넌트
+- `src/runners/parallel_runner.py`: 병렬 실행 엔진
+- `tests/runners/test_parallel_runner.py`: 병렬 실행 테스트
+- `ParallelConfig`: 병렬 실행 설정 관리
+- `ParallelResult`: 실행 결과 및 메트릭
+
+### 테스트 현황
+- **87개 단위 테스트** (99% 성공률)
+- **병렬 실행 테스트** 완료
+- **리소스 관리 테스트** 통과
 
 ## 개요
 

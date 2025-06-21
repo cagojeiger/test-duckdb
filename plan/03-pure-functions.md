@@ -195,7 +195,7 @@ def partition_experiments(
     configs: List[ExperimentConfig],
     num_partitions: int
 ) -> List[List[ExperimentConfig]]:
-    """실험을 균등하게 분할 (병렬 처리용)"""
+    """실험을 균등하게 분할 (병렬 처리용) - Phase 4B 구현 완료 ✅"""
     partition_size = len(configs) // num_partitions
     partitions = []
 
@@ -205,6 +205,28 @@ def partition_experiments(
         partitions.append(configs[start:end])
 
     return partitions
+
+# Phase 4B: 병렬 실행 관련 순수 함수들 (구현 완료)
+def calculate_optimal_workers(
+    available_memory_mb: int,
+    memory_threshold_mb: int,
+    cpu_count: int
+) -> int:
+    """시스템 리소스 기반 최적 워커 수 계산"""
+    memory_based_workers = available_memory_mb // memory_threshold_mb
+    cpu_based_workers = max(1, cpu_count - 1)  # 하나는 메인 프로세스용 예약
+    return min(memory_based_workers, cpu_based_workers, 8)  # 최대 8개 제한
+
+def batch_configs_for_parallel(
+    configs: List[ExperimentConfig],
+    batch_size: int
+) -> List[List[ExperimentConfig]]:
+    """병렬 실행을 위한 설정 배치 분할"""
+    batches = []
+    for i in range(0, len(configs), batch_size):
+        batch = configs[i:i + batch_size]
+        batches.append(batch)
+    return batches
 ```
 
 ## 5. 메트릭 계산 함수
@@ -342,4 +364,42 @@ def validate_experiment_result(
     return Right(result)
 ```
 
-이러한 순수 함수들은 테스트가 쉽고, 병렬 처리가 안전하며, 재사용이 가능합니다. 각 함수는 명확한 입력과 출력을 가지며, 외부 상태에 의존하지 않습니다.
+## 8. 병렬 처리 지원 함수 (Phase 4B 완료)
+
+```python
+def merge_parallel_results(
+    results_list: List[List[ExperimentResult]]
+) -> List[ExperimentResult]:
+    """병렬 실행 결과 병합"""
+    merged = []
+    for results in results_list:
+        merged.extend(results)
+    return merged
+
+def calculate_parallel_efficiency(
+    sequential_time: float,
+    parallel_time: float,
+    worker_count: int
+) -> Dict[str, float]:
+    """병렬 실행 효율성 계산"""
+    speedup = sequential_time / parallel_time if parallel_time > 0 else 0
+    efficiency = speedup / worker_count if worker_count > 0 else 0
+    
+    return {
+        "speedup": speedup,
+        "efficiency": efficiency,
+        "parallel_overhead": max(0, (worker_count * parallel_time) - sequential_time)
+    }
+
+def validate_parallel_config(config: ParallelConfig) -> Either[str, ParallelConfig]:
+    """병렬 실행 설정 검증"""
+    if config.max_workers <= 0:
+        return Left("max_workers must be positive")
+    if config.memory_threshold_mb <= 0:
+        return Left("memory_threshold_mb must be positive")
+    if config.experiment_timeout_seconds <= 0:
+        return Left("experiment_timeout_seconds must be positive")
+    return Right(config)
+```
+
+이러한 순수 함수들은 테스트가 쉽고, 병렬 처리가 안전하며, 재사용이 가능합니다. 각 함수는 명확한 입력과 출력을 가지며, 외부 상태에 의존하지 않습니다. Phase 4B에서 추가된 병렬 처리 함수들은 멀티프로세싱 환경에서 안전하게 동작하도록 설계되었습니다.

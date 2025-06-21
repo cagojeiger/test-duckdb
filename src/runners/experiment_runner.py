@@ -25,6 +25,7 @@ from src.pipelines.experiments import (
 )
 from src.runners.checkpoint import CheckpointManager
 from src.runners.monitoring import ResourceMonitor
+from src.runners.parallel_runner import ParallelExperimentRunner, ParallelConfig
 
 
 class ExperimentRunner:
@@ -34,11 +35,27 @@ class ExperimentRunner:
         self,
         output_dir: Path = Path("results"),
         checkpoint_dir: Path = Path("checkpoints"),
+        enable_parallel: bool = False,
+        max_workers: int = 4,
+        memory_threshold_mb: int = 6000,
     ):
         self.output_dir = output_dir
         self.checkpoint_dir = checkpoint_dir
         self.checkpoint_manager = CheckpointManager(checkpoint_dir)
         self.resource_monitor = ResourceMonitor()
+        self.enable_parallel = enable_parallel
+
+        if enable_parallel:
+            parallel_config = ParallelConfig(
+                max_workers=max_workers,
+                memory_threshold_mb=memory_threshold_mb,
+                experiment_timeout_seconds=300,
+            )
+            self.parallel_runner: Optional[ParallelExperimentRunner] = (
+                ParallelExperimentRunner(parallel_config)
+            )
+        else:
+            self.parallel_runner = None
 
         self.output_dir.mkdir(exist_ok=True)
         self.checkpoint_dir.mkdir(exist_ok=True)
@@ -148,7 +165,16 @@ class ExperimentRunner:
     def _run_experiment_batch(
         self, configs: List[ExperimentConfig]
     ) -> List[ExperimentResult]:
-        """Run a batch of experiments with monitoring"""
+        """Run a batch of experiments with monitoring (sequential or parallel)"""
+        if self.enable_parallel and self.parallel_runner:
+            return self._run_experiment_batch_parallel(configs)
+        else:
+            return self._run_experiment_batch_sequential(configs)
+
+    def _run_experiment_batch_sequential(
+        self, configs: List[ExperimentConfig]
+    ) -> List[ExperimentResult]:
+        """Run a batch of experiments sequentially (original implementation)"""
         results = []
 
         for i, config in enumerate(configs, 1):
@@ -173,6 +199,45 @@ class ExperimentRunner:
                 continue
 
         return results
+
+    def _run_experiment_batch_parallel(
+        self, configs: List[ExperimentConfig]
+    ) -> List[ExperimentResult]:
+        """Run a batch of experiments in parallel"""
+        if not self.parallel_runner:
+            raise RuntimeError("Parallel runner not initialized")
+
+        print(f"  🚀 Running {len(configs)} experiments in parallel")
+
+        def progress_callback(completed: int, total: int) -> None:
+            print(f"  📊 Progress: {completed}/{total} experiments completed")
+
+        try:
+            parallel_io = self.parallel_runner.run_experiments_batched_parallel(
+                configs,
+                batch_size=min(8, len(configs)),
+                progress_callback=progress_callback,
+            )
+            parallel_result = parallel_io.run()
+
+            print(f"  ✅ Parallel execution completed:")
+            print(f"     Successful: {len(parallel_result.results)}")
+            print(f"     Failed: {len(parallel_result.failed_configs)}")
+            print(f"     Execution time: {parallel_result.execution_time_seconds:.1f}s")
+            print(f"     Peak memory: {parallel_result.peak_memory_mb:.1f}MB")
+            print(f"     Workers used: {parallel_result.worker_count_used}")
+
+            if parallel_result.failed_configs:
+                print(f"  ⚠️  {len(parallel_result.failed_configs)} experiments failed")
+                for failed_config in parallel_result.failed_configs:
+                    print(f"     - {self._config_summary(failed_config)}")
+
+            return parallel_result.results
+
+        except Exception as e:
+            print(f"  ❌ Parallel execution failed: {str(e)}")
+            print("  🔄 Falling back to sequential execution...")
+            return self._run_experiment_batch_sequential(configs)
 
     def _filter_configs(
         self,
@@ -286,6 +351,10 @@ Examples:
   python -m src.runners.experiment_runner --all --batch-size 2
 
   python -m src.runners.experiment_runner --all --resume
+
+  python -m src.runners.experiment_runner --all --parallel --workers 6
+
+  python -m src.runners.experiment_runner --all --parallel --max-memory 8000
         """,
     )
 
@@ -323,6 +392,26 @@ Examples:
     )
 
     parser.add_argument(
+        "--parallel",
+        action="store_true",
+        help="Enable parallel experiment execution using multiprocessing",
+    )
+
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=4,
+        help="Maximum number of parallel workers (default: 4)",
+    )
+
+    parser.add_argument(
+        "--max-memory",
+        type=int,
+        default=6000,
+        help="Memory threshold in MB for worker adjustment (default: 6000)",
+    )
+
+    parser.add_argument(
         "--resume", action="store_true", help="Resume from previous checkpoint"
     )
 
@@ -352,7 +441,11 @@ def main() -> int:
         parser.error("Must specify --all or at least one filter option")
 
     runner = ExperimentRunner(
-        output_dir=args.output_dir, checkpoint_dir=args.checkpoint_dir
+        output_dir=args.output_dir,
+        checkpoint_dir=args.checkpoint_dir,
+        enable_parallel=args.parallel,
+        max_workers=args.workers,
+        memory_threshold_mb=args.max_memory,
     )
 
     try:

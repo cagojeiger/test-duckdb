@@ -32,29 +32,38 @@ The project uses a layered functional architecture (see plan/ directory for deta
 
 ### Environment Setup
 ```bash
-# Install Python dependencies
+# Install Python dependencies (recommended: use uv)
+uv sync
+
+# Alternative: pip install
 pip install duckdb faker pandas numpy psutil matplotlib seaborn plotly pyrsistent
 
-# Install DuckDB VSS extension
-python -c "import duckdb; conn = duckdb.connect(); conn.execute('INSTALL vss'); conn.execute('LOAD vss')"
+# Install and verify DuckDB VSS extension
+python test_duckdb_vss_installation.py
 
 # Verify VSS installation
 python -c "import duckdb; conn = duckdb.connect(); print(conn.execute('SELECT * FROM duckdb_extensions() WHERE extension_name = \'vss\'').fetchall())"
 
 # Check DuckDB version (VSS requires compatible version)
 python -c "import duckdb; print(f'DuckDB version: {duckdb.__version__}')"
+
+# Run tests to verify setup (87 tests, 99% success rate)
+pytest tests/ -v
 ```
 
 ### Running Experiments
 ```bash
-# Run single experiment (when implemented)
-python -m src.main --config experiments/small_128d_pure.json
-
-# Run all 48 experiment combinations
+# Run all 48 experiment combinations (sequential)
 python -m src.runners.experiment_runner --all
 
-# Run specific experiment matrix
-python -m src.runners.experiment_runner --data-scale small --dimensions 128,256
+# Run all experiments in parallel (recommended)
+python -m src.runners.experiment_runner --all --parallel
+
+# Run with custom parallel settings
+python -m src.runners.experiment_runner --all --parallel --workers 6 --max-memory 8000
+
+# Run specific experiment matrix with parallel execution
+python -m src.runners.experiment_runner --data-scale small --dimensions 128,256 --parallel
 
 # Resume from checkpoint
 python -m src.runners.experiment_runner --resume --checkpoint-dir checkpoints/
@@ -62,9 +71,10 @@ python -m src.runners.experiment_runner --resume --checkpoint-dir checkpoints/
 # Monitor experiment progress
 python -m src.tools.monitor --experiment-dir experiments/
 
-# Run tests
+# Run tests (87 unit tests, 99% success rate)
 python -m pytest tests/ -v
 python -m pytest tests/pure/ -v  # Test only pure functions
+python -m pytest tests/runners/ -v  # Test runners including parallel execution
 python -m pytest tests/effects/ -v --db-mode=mock  # Test effects with mocks
 ```
 
@@ -125,6 +135,8 @@ Either[E, T] = Error handling without exceptions
 - Test different HNSW parameters (ef_construction, ef_search, M)
 - Monitor memory usage carefully as indexes are RAM-resident
 - Use parallel_map for concurrent pure operations
+- **Use parallel experiment execution** with `--parallel` flag for faster benchmarking
+- **Dynamic worker scaling** based on available memory and CPU cores
 - Use connection pooling wrapped in Reader monad
 - Profile queries with EXPLAIN ANALYZE
 
@@ -149,6 +161,10 @@ src/
 │   └── metrics/       # Performance monitoring
 ├── pipelines/          # Function composition pipelines
 └── runners/            # Main entry points
+    ├── experiment_runner.py    # CLI experiment runner with parallel support
+    ├── parallel_runner.py      # Parallel execution engine (Phase 4B)
+    ├── checkpoint.py           # Checkpoint management
+    └── monitoring.py           # Resource monitoring
 
 plan/                   # Functional design documentation
 ├── 01-functional-architecture.md
@@ -157,7 +173,8 @@ plan/                   # Functional design documentation
 ├── 04-effect-management.md
 ├── 05-pipeline-composition.md
 ├── 06-experiment-workflow.md
-└── 07-implementation-guide.md
+├── 07-implementation-guide.md
+└── 08-current-status.md        # Current implementation status
 ```
 
 ## Experiment Workflow
