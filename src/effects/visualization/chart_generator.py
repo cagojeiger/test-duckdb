@@ -5,7 +5,7 @@ and interactive dashboards from analysis results.
 """
 
 from __future__ import annotations
-from typing import List, Optional, Tuple
+from typing import List, Optional
 import os
 from pathlib import Path
 
