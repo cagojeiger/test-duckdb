@@ -36,40 +36,7 @@
 - **리소스 사용량**: CPU, 메모리 사용률
 - **인덱스 효율성**: 구축 시간, 크기, 압축률
 
-## 프로젝트 구조
 
-```
-src/
-├── data_generation/          # Faker 기반 데이터 생성
-│   ├── __init__.py
-│   ├── text_embeddings.py    # 텍스트 임베딩 데이터 생성
-│   ├── image_features.py     # 이미지 특징 벡터 생성
-│   ├── recommendation_vectors.py  # 추천 시스템 벡터 생성
-│   └── base_generator.py     # 공통 생성 로직
-├── benchmarks/               # 성능 측정 및 분석
-│   ├── __init__.py
-│   ├── performance_metrics.py  # 성능 지표 수집
-│   ├── query_executor.py     # 쿼리 실행 엔진
-│   ├── result_analyzer.py    # 결과 분석 및 시각화
-│   └── benchmark_runner.py   # 벤치마크 실행 관리
-├── scenarios/                # 벡터 검색 시나리오
-│   ├── __init__.py
-│   ├── text_similarity.py    # 텍스트 유사도 검색
-│   ├── image_matching.py     # 이미지 매칭
-│   ├── recommendation.py     # 추천 시스템
-│   └── base_scenario.py      # 시나리오 기본 클래스
-├── utils/                    # DuckDB 관리 유틸리티
-│   ├── __init__.py
-│   ├── duckdb_manager.py     # DuckDB 연결 및 관리
-│   ├── vector_operations.py  # 벡터 연산 헬퍼
-│   └── config.py            # 설정 관리
-├── tests/                    # 테스트 코드
-│   ├── __init__.py
-│   ├── test_data_generation.py
-│   ├── test_benchmarks.py
-│   └── test_scenarios.py
-└── main.py                   # 메인 실행 스크립트
-```
 
 ## 실험 설계
 
