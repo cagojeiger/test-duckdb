@@ -160,6 +160,7 @@ class TestTerminalDashboard:
 
         self.dashboard.add_result(result)
 
+        assert self.dashboard.state.recent_results is not None
         assert len(self.dashboard.state.recent_results) == 1
         assert self.dashboard.state.recent_results[0] == result
         mock_update_display.assert_called_once()
@@ -172,6 +173,7 @@ class TestTerminalDashboard:
         for result in results:
             self.dashboard.add_result(result)
 
+        assert self.dashboard.state.recent_results is not None
         assert len(self.dashboard.state.recent_results) == 10
         assert self.dashboard.state.recent_results[-1] == results[-1]
 
@@ -182,6 +184,7 @@ class TestTerminalDashboard:
 
         self.dashboard.add_alert(message)
 
+        assert self.dashboard.state.alerts is not None
         assert len(self.dashboard.state.alerts) == 1
         assert message in self.dashboard.state.alerts[0]
         mock_update_display.assert_called_once()
@@ -194,6 +197,7 @@ class TestTerminalDashboard:
         for message in messages:
             self.dashboard.add_alert(message)
 
+        assert self.dashboard.state.alerts is not None
         assert len(self.dashboard.state.alerts) == 5
         assert "Alert 6" in self.dashboard.state.alerts[-1]
 
