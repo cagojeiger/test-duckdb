@@ -5,7 +5,7 @@ DuckDB VSS benchmarking results with interactive charts and live updates.
 """
 
 from __future__ import annotations
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Dict, Any
 import json
 from datetime import datetime
 
@@ -95,7 +95,7 @@ def create_dashboard_app(results: List[ExperimentResult]) -> FastAPI:
             accuracy_comparison = compare_accuracy_metrics(results)
 
             analysis_cache["performance_analysis"] = performance_analysis
-            analysis_cache["trend_analysis"] = trend_analysis
+            analysis_cache["trend_analysis"] = trend_analysis  
             analysis_cache["search_comparison"] = search_comparison
             analysis_cache["accuracy_comparison"] = accuracy_comparison
             analysis_cache["last_updated"] = datetime.now().isoformat()
@@ -103,7 +103,7 @@ def create_dashboard_app(results: List[ExperimentResult]) -> FastAPI:
         return analysis_cache
 
     @app.get("/", response_class=HTMLResponse)
-    async def dashboard_home():
+    async def dashboard_home() -> HTMLResponse:
         """Serve the main dashboard HTML page."""
         html_content = """
         <!DOCTYPE html>
@@ -364,7 +364,7 @@ def create_dashboard_app(results: List[ExperimentResult]) -> FastAPI:
         return HTMLResponse(content=html_content)
 
     @app.get("/api/analysis/summary")
-    async def get_analysis_summary():
+    async def get_analysis_summary() -> JSONResponse:
         """Get analysis summary data."""
         try:
             analysis_data = get_analysis_data()
@@ -411,7 +411,7 @@ def create_dashboard_app(results: List[ExperimentResult]) -> FastAPI:
             raise HTTPException(status_code=500, detail=str(e))
 
     @app.get("/api/analysis/{experiment_id}")
-    async def get_analysis(experiment_id: str):
+    async def get_analysis(experiment_id: str) -> JSONResponse:
         """Get analysis results for a specific experiment."""
         try:
             experiment = None
@@ -464,7 +464,7 @@ def create_dashboard_app(results: List[ExperimentResult]) -> FastAPI:
             raise HTTPException(status_code=500, detail=str(e))
 
     @app.websocket("/ws/live-analysis")
-    async def websocket_endpoint(websocket: WebSocket):
+    async def websocket_endpoint(websocket: WebSocket) -> None:
         """WebSocket endpoint for real-time analysis updates."""
         await manager.connect(websocket)
         try:
@@ -497,7 +497,7 @@ def create_dashboard_app(results: List[ExperimentResult]) -> FastAPI:
             manager.disconnect(websocket)
 
     @app.get("/health")
-    async def health_check():
+    async def health_check() -> JSONResponse:
         """Health check endpoint."""
         return JSONResponse(
             {
