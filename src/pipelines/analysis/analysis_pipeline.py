@@ -185,7 +185,7 @@ def generate_visualizations(
     """
 
     def _generate_all() -> Dict[str, Any]:
-        visualization_paths = {}
+        visualization_paths: Dict[str, Any] = {}
 
         heatmap_io = generate_performance_heatmap(analysis)
         heatmap_path = heatmap_io.run()
