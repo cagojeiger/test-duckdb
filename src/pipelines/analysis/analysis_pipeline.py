@@ -298,7 +298,7 @@ def create_analysis_report(
             if trends.scale_trends:
                 report_content.append("### Scale Performance Trends\n\n")
                 for metric, data_points in trends.scale_trends.items():
-                    scale_values = [dp[0] for dp in data_points]
+                    scale_values: List[int] = [dp[0] for dp in data_points]
                     report_content.append(
                         f"- **{metric}**: Performance scaling across {len(set(scale_values))} different data scales\n"
                     )
@@ -307,7 +307,7 @@ def create_analysis_report(
             if trends.dimension_trends:
                 report_content.append("### Dimension Performance Trends\n\n")
                 for metric, data_points in trends.dimension_trends.items():
-                    dimension_values = [dp[0] for dp in data_points]
+                    dimension_values: List[int] = [dp[0] for dp in data_points]
                     report_content.append(
                         f"- **{metric}**: Performance across {len(set(dimension_values))} different vector dimensions\n"
                     )
