@@ -125,7 +125,7 @@ def create_trend_charts(
             if "query_time_ms" in trends.temporal_trends:
                 temporal_data = trends.temporal_trends["query_time_ms"]
                 if temporal_data:
-                    timestamps, values = zip(*temporal_data)
+                    timestamps, values = list(zip(*temporal_data))
                     axes[0].plot(timestamps, values, marker="o", linewidth=2)
                     axes[0].set_title("Query Time Trend Over Time")
                     axes[0].set_ylabel("Query Time (ms)")
@@ -138,7 +138,7 @@ def create_trend_charts(
             if "throughput_qps" in trends.temporal_trends:
                 temporal_data = trends.temporal_trends["throughput_qps"]
                 if temporal_data:
-                    timestamps, values = zip(*temporal_data)
+                    timestamps, values = list(zip(*temporal_data))
                     axes[1].plot(
                         timestamps, values, marker="s", linewidth=2, color="green"
                     )
@@ -306,7 +306,7 @@ def export_interactive_dashboard(
             if "query_time_ms" in trends.temporal_trends:
                 temporal_data = trends.temporal_trends["query_time_ms"]
                 if temporal_data:
-                    timestamps, values = zip(*temporal_data)
+                    timestamps, values = list(zip(*temporal_data))
                     trend_fig.add_trace(
                         go.Scatter(
                             x=timestamps,
