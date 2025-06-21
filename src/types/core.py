@@ -83,6 +83,15 @@ class HNSWParams:
 
 
 @dataclass(frozen=True)
+class DatabaseConfig:
+    """데이터베이스 연결 설정"""
+
+    database_path: str = ":memory:"
+    memory_limit_mb: Optional[int] = None
+    threads: Optional[int] = None
+
+
+@dataclass(frozen=True)
 class ExperimentConfig:
     """단일 실험 설정"""
 
@@ -99,10 +108,10 @@ class ExperimentConfig:
 class Metrics:
     """성능 측정 결과"""
 
-    elapsed_time: float  # seconds
-    memory_used: float  # MB
-    cpu_percent: float
-    throughput: float  # items/sec
+    query_time_ms: float
+    throughput_qps: float
+    memory_usage_mb: float
+    index_size_mb: float
 
 
 @dataclass(frozen=True)
