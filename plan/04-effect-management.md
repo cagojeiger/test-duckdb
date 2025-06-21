@@ -18,20 +18,20 @@ U = TypeVar('U')
 
 class IO(Generic[T], ABC):
     """부수 효과를 캡슐화하는 IO 모나드"""
-    
+
     @abstractmethod
     def unsafe_run(self) -> T:
         """효과를 실제로 실행 (unsafe 접두사로 위험성 표시)"""
         pass
-    
+
     def map(self, f: Callable[[T], U]) -> 'IO[U]':
         """순수 함수로 결과 변환"""
         return MappedIO(self, f)
-    
+
     def flat_map(self, f: Callable[[T], 'IO[U]']) -> 'IO[U]':
         """IO를 반환하는 함수로 체이닝"""
         return FlatMappedIO(self, f)
-    
+
     def zip(self, other: 'IO[U]') -> 'IO[Tuple[T, U]]':
         """두 IO 작업을 병렬로 실행"""
         return ZippedIO(self, other)
@@ -40,7 +40,7 @@ class PureIO(IO[T]):
     """순수한 값을 IO로 래핑"""
     def __init__(self, value: T):
         self.value = value
-    
+
     def unsafe_run(self) -> T:
         return self.value
 
@@ -48,7 +48,7 @@ class EffectIO(IO[T]):
     """실제 부수 효과를 가진 IO"""
     def __init__(self, effect: Callable[[], T]):
         self.effect = effect
-    
+
     def unsafe_run(self) -> T:
         return self.effect()
 
@@ -57,7 +57,7 @@ class MappedIO(IO[U]):
     def __init__(self, io: IO[T], f: Callable[[T], U]):
         self.io = io
         self.f = f
-    
+
     def unsafe_run(self) -> U:
         return self.f(self.io.unsafe_run())
 ```
@@ -105,7 +105,7 @@ class DBConnection:
     def __init__(self, config: DBConfig):
         self.config = config
         self._conn = None
-    
+
     @contextmanager
     def get_connection(self):
         """컨텍스트 매니저로 연결 관리"""
@@ -116,7 +116,7 @@ class DBConnection:
         finally:
             if self._conn:
                 self._conn.close()
-    
+
     def _setup_connection(self):
         """연결 초기 설정"""
         self._conn.execute(f"SET threads={self.config.threads}")
@@ -162,23 +162,23 @@ def insert_documents(
     def effect(conn: duckdb.DuckDBPyConnection):
         start_time = time.time()
         start_memory = get_memory_usage()
-        
+
         rows = documents_to_rows(documents)
         conn.executemany(
             f"INSERT INTO {table_name} VALUES (?, ?, ?, ?, ?, ?)",
             rows
         )
-        
+
         elapsed = time.time() - start_time
         memory_used = get_memory_usage() - start_memory
-        
+
         return Metrics(
             elapsed_time=elapsed,
             memory_used=memory_used,
             cpu_percent=get_cpu_percent(),
             throughput=len(documents) / elapsed
         )
-    
+
     return lambda config: with_db_connection(config, effect)
 
 def create_hnsw_index(
@@ -188,10 +188,10 @@ def create_hnsw_index(
     """HNSW 인덱스 생성 IO"""
     def effect(conn: duckdb.DuckDBPyConnection):
         start_time = time.time()
-        
+
         conn.execute(f"""
-            CREATE INDEX idx_{table_name} ON {table_name} 
-            USING HNSW(vector) 
+            CREATE INDEX idx_{table_name} ON {table_name}
+            USING HNSW(vector)
             WITH (
                 ef_construction = {params.ef_construction},
                 ef_search = {params.ef_search},
@@ -199,7 +199,7 @@ def create_hnsw_index(
                 metric = '{params.metric}'
             )
         """)
-        
+
         elapsed = time.time() - start_time
         return Metrics(
             elapsed_time=elapsed,
@@ -207,7 +207,7 @@ def create_hnsw_index(
             cpu_percent=get_cpu_percent(),
             throughput=1.0 / elapsed
         )
-    
+
     return lambda config: with_db_connection(config, effect)
 
 def vector_search(
@@ -219,22 +219,22 @@ def vector_search(
     """벡터 검색 IO"""
     def effect(conn: duckdb.DuckDBPyConnection):
         start_time = time.time()
-        
+
         base_query = f"""
-            SELECT id, 
+            SELECT id,
                    array_distance(vector, ?::FLOAT[{query_vector.dimension}]) as distance
             FROM {table_name}
         """
-        
+
         if filter_sql:
             base_query += f" WHERE {filter_sql}"
-        
+
         query = base_query + f" ORDER BY distance LIMIT {k}"
-        
+
         result = conn.execute(query, [list(query_vector.data)]).fetchall()
-        
+
         elapsed = time.time() - start_time
-        
+
         return SearchResult(
             query_id=str(uuid.uuid4()),
             retrieved_ids=[row[0] for row in result],
@@ -246,7 +246,7 @@ def vector_search(
                 throughput=1.0 / elapsed
             )
         )
-    
+
     return lambda config: with_db_connection(config, effect)
 ```
 
@@ -287,21 +287,21 @@ def save_results_csv(
     """실험 결과를 CSV로 저장"""
     def effect():
         path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         with open(path, 'w', newline='', encoding='utf-8') as f:
             writer = csv.DictWriter(f, fieldnames=[
                 'data_scale', 'dimension', 'search_type', 'use_filter',
                 'insert_time', 'index_time', 'mean_search_time',
                 'recall_at_10', 'throughput'
             ])
-            
+
             writer.writeheader()
             data = results_to_dataframe(results)
-            
+
             for i in range(len(results)):
                 row = {key: values[i] for key, values in data.items()}
                 writer.writerow(row)
-    
+
     return io_effect(effect)
 ```
 
@@ -327,22 +327,22 @@ def measure_io(io: IO[T]) -> IO[Tuple[T, Metrics]]:
         start_time = time.time()
         start_memory = get_memory_usage()
         start_cpu = psutil.Process()
-        
+
         result = io.unsafe_run()
-        
+
         elapsed = time.time() - start_time
         memory_delta = get_memory_usage() - start_memory
         cpu_percent = start_cpu.cpu_percent(interval=0.1)
-        
+
         metrics = Metrics(
             elapsed_time=elapsed,
             memory_used=memory_delta,
             cpu_percent=cpu_percent,
             throughput=1.0 / elapsed if elapsed > 0 else 0
         )
-        
+
         return (result, metrics)
-    
+
     return io_effect(effect)
 
 def with_retry(
@@ -353,7 +353,7 @@ def with_retry(
     """재시도 로직을 가진 IO"""
     def effect():
         last_error = None
-        
+
         for attempt in range(max_attempts):
             try:
                 result = io.unsafe_run()
@@ -362,9 +362,9 @@ def with_retry(
                 last_error = e
                 if attempt < max_attempts - 1:
                     time.sleep(delay * (attempt + 1))
-        
+
         return Left(last_error)
-    
+
     return io_effect(effect)
 ```
 
@@ -388,7 +388,7 @@ def log_io(level: str, message: str, **context) -> IO[None]:
         logger = logging.getLogger(__name__)
         log_method = getattr(logger, level.lower())
         log_method(message, extra=context)
-    
+
     return io_effect(effect)
 
 def with_logging(
@@ -399,8 +399,8 @@ def with_logging(
     return (
         log_io("info", f"Starting {operation}")
         .flat_map(lambda _: measure_io(io))
-        .flat_map(lambda result_metrics: 
-            log_io("info", f"Completed {operation}", 
+        .flat_map(lambda result_metrics:
+            log_io("info", f"Completed {operation}",
                    elapsed=result_metrics[1].elapsed_time,
                    memory=result_metrics[1].memory_used)
             .map(lambda _: result_metrics[0])
@@ -421,22 +421,22 @@ def parallel_io(
     """IO 작업들을 병렬로 실행"""
     def effect():
         results = []
-        
+
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # IO를 Future로 변환
             future_to_index = {
                 executor.submit(io.unsafe_run): i
                 for i, io in enumerate(ios)
             }
-            
+
             # 결과를 순서대로 수집
             results = [None] * len(ios)
             for future in as_completed(future_to_index):
                 index = future_to_index[future]
                 results[index] = future.result()
-        
+
         return results
-    
+
     return io_effect(effect)
 
 def parallel_map_io(
@@ -462,7 +462,7 @@ def with_resource(
     def effect():
         with resource_factory() as resource:
             return f(resource)
-    
+
     return io_effect(effect)
 
 def bracket(
@@ -477,7 +477,7 @@ def bracket(
             return use(resource).unsafe_run()
         finally:
             release(resource).unsafe_run()
-    
+
     return io_effect(effect)
 ```
 

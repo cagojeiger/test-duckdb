@@ -107,26 +107,26 @@ SELECT array_negative_inner_product([1.0, 2.0, 3.0]::FLOAT[3], [4.0, 5.0, 6.0]::
 
 ```sql
 -- 상위 3개 유사 벡터 검색
-SELECT * 
-FROM my_vector_table 
-ORDER BY array_distance(vec, [1.0, 2.0, 3.0]::FLOAT[3]) 
+SELECT *
+FROM my_vector_table
+ORDER BY array_distance(vec, [1.0, 2.0, 3.0]::FLOAT[3])
 LIMIT 3;
 ```
 
 ### 2. min_by 집계 함수 사용
 ```sql
 -- 가장 유사한 3개 벡터를 구조체로 반환
-SELECT min_by(my_vector_table, array_distance(vec, [1.0, 2.0, 3.0]::FLOAT[3]), 3 ORDER BY vec) AS result 
+SELECT min_by(my_vector_table, array_distance(vec, [1.0, 2.0, 3.0]::FLOAT[3]), 3 ORDER BY vec) AS result
 FROM my_vector_table;
 ```
 
 ### 3. 인덱스 사용 확인
 ```sql
 -- 쿼리 실행 계획에서 HNSW_INDEX_SCAN 확인
-EXPLAIN 
-SELECT * 
-FROM my_vector_table 
-ORDER BY array_distance(vec, [1.0, 2.0, 3.0]::FLOAT[3]) 
+EXPLAIN
+SELECT *
+FROM my_vector_table
+ORDER BY array_distance(vec, [1.0, 2.0, 3.0]::FLOAT[3])
 LIMIT 3;
 ```
 
@@ -171,8 +171,8 @@ CREATE INDEX my_hnsw_index ON my_vector_table USING HNSW(vec);
 ```sql
 -- 쿼리 벡터와 가장 유사한 상위 2개 결과
 SELECT id, description, array_distance(vec, [1.1, 2.1, 3.1]::FLOAT[3]) as distance
-FROM my_vector_table 
-ORDER BY distance 
+FROM my_vector_table
+ORDER BY distance
 LIMIT 2;
 ```
 
@@ -335,7 +335,7 @@ CREATE TABLE text_vectors (
 );
 
 -- HNSW 인덱스 생성
-CREATE INDEX text_hnsw_idx ON text_vectors USING HNSW(embedding) 
+CREATE INDEX text_hnsw_idx ON text_vectors USING HNSW(embedding)
 WITH (metric = 'cosine', ef_construction = 128, M = 16);
 ```
 
@@ -343,15 +343,15 @@ WITH (metric = 'cosine', ef_construction = 128, M = 16);
 ```sql
 -- 벡터 유사도 검색 (기본)
 SELECT id, text, array_cosine_distance(embedding, ?::FLOAT[512]) as distance
-FROM text_vectors 
-ORDER BY distance 
+FROM text_vectors
+ORDER BY distance
 LIMIT 10;
 
 -- 필터링 조건부 검색
 SELECT id, text, array_cosine_distance(embedding, ?::FLOAT[512]) as distance
-FROM text_vectors 
+FROM text_vectors
 WHERE category = '뉴스'
-ORDER BY distance 
+ORDER BY distance
 LIMIT 10;
 ```
 
