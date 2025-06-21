@@ -7,7 +7,7 @@ import gc
 import time
 import psutil
 import threading
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Callable
 from datetime import datetime
 from dataclasses import dataclass
 
@@ -28,10 +28,14 @@ class ResourceMonitor:
     """Monitors system resources during experiment execution"""
 
     def __init__(
-        self, memory_threshold_mb: float = 7000, monitoring_interval: float = 5.0
+        self, 
+        memory_threshold_mb: float = 7000, 
+        monitoring_interval: float = 5.0,
+        dashboard_callback: Optional[Callable[[ResourceSnapshot], None]] = None
     ):
         self.memory_threshold_mb = memory_threshold_mb
         self.monitoring_interval = monitoring_interval
+        self.dashboard_callback = dashboard_callback
 
         self.is_monitoring = False
         self.monitoring_thread: Optional[threading.Thread] = None
@@ -172,6 +176,9 @@ class ResourceMonitor:
             try:
                 snapshot = self._take_resource_snapshot()
                 self.resource_history.append(snapshot)
+
+                if self.dashboard_callback:
+                    self.dashboard_callback(snapshot)
 
                 if snapshot.memory_usage_mb > self.memory_threshold_mb:
                     self._add_memory_alert(

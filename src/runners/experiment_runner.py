@@ -9,7 +9,7 @@ import sys
 import json
 import time
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, TYPE_CHECKING
 from datetime import datetime
 
 from src.types.core import (
@@ -27,6 +27,9 @@ from src.runners.checkpoint import CheckpointManager
 from src.runners.monitoring import ResourceMonitor
 from src.runners.parallel_runner import ParallelExperimentRunner, ParallelConfig
 
+if TYPE_CHECKING:
+    from src.dashboard.terminal import TerminalDashboard
+
 
 class ExperimentRunner:
     """Main experiment runner with CLI interface"""
@@ -38,11 +41,21 @@ class ExperimentRunner:
         enable_parallel: bool = False,
         max_workers: int = 4,
         memory_threshold_mb: int = 6000,
+        dashboard: Optional["TerminalDashboard"] = None,
     ):
         self.output_dir = output_dir
         self.checkpoint_dir = checkpoint_dir
+        self.dashboard = dashboard
         self.checkpoint_manager = CheckpointManager(checkpoint_dir)
-        self.resource_monitor = ResourceMonitor()
+        
+        dashboard_callback = None
+        if self.dashboard:
+            dashboard_callback = self.dashboard.update_resources
+            
+        self.resource_monitor = ResourceMonitor(
+            memory_threshold_mb=memory_threshold_mb,
+            dashboard_callback=dashboard_callback
+        )
         self.enable_parallel = enable_parallel
 
         if enable_parallel:
@@ -210,7 +223,10 @@ class ExperimentRunner:
         print(f"  🚀 Running {len(configs)} experiments in parallel")
 
         def progress_callback(completed: int, total: int) -> None:
-            print(f"  📊 Progress: {completed}/{total} experiments completed")
+            if self.dashboard:
+                self.dashboard.update_progress(completed, total)
+            else:
+                print(f"  📊 Progress: {completed}/{total} experiments completed")
 
         try:
             parallel_io = self.parallel_runner.run_experiments_batched_parallel(
@@ -355,6 +371,8 @@ Examples:
   python -m src.runners.experiment_runner --all --parallel --workers 6
 
   python -m src.runners.experiment_runner --all --parallel --max-memory 8000
+
+  python -m src.runners.experiment_runner --all --dashboard
         """,
     )
 
@@ -416,6 +434,12 @@ Examples:
     )
 
     parser.add_argument(
+        "--dashboard",
+        action="store_true",
+        help="Enable terminal-based real-time dashboard for monitoring"
+    )
+
+    parser.add_argument(
         "--output-dir",
         type=Path,
         default=Path("results"),
@@ -440,12 +464,19 @@ def main() -> int:
     if not args.all and not any([args.data_scale, args.dimensions, args.search_type]):
         parser.error("Must specify --all or at least one filter option")
 
+    dashboard = None
+    if args.dashboard:
+        from src.dashboard.terminal import TerminalDashboard
+        dashboard = TerminalDashboard()
+        dashboard.start()
+
     runner = ExperimentRunner(
         output_dir=args.output_dir,
         checkpoint_dir=args.checkpoint_dir,
         enable_parallel=args.parallel,
         max_workers=args.workers,
         memory_threshold_mb=args.max_memory,
+        dashboard=dashboard,
     )
 
     try:
@@ -471,6 +502,9 @@ def main() -> int:
     except Exception as e:
         print(f"\n❌ Experiment runner failed: {str(e)}")
         return 1
+    finally:
+        if dashboard:
+            dashboard.stop()
 
 
 if __name__ == "__main__":
