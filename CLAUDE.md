@@ -40,6 +40,9 @@ python -c "import duckdb; conn = duckdb.connect(); conn.execute('INSTALL vss'); 
 
 # Verify VSS installation
 python -c "import duckdb; conn = duckdb.connect(); print(conn.execute('SELECT * FROM duckdb_extensions() WHERE extension_name = \'vss\'').fetchall())"
+
+# Check DuckDB version (VSS requires compatible version)
+python -c "import duckdb; print(f'DuckDB version: {duckdb.__version__}')"
 ```
 
 ### Running Experiments
@@ -56,9 +59,13 @@ python -m src.runners.experiment_runner --data-scale small --dimensions 128,256
 # Resume from checkpoint
 python -m src.runners.experiment_runner --resume --checkpoint-dir checkpoints/
 
+# Monitor experiment progress
+python -m src.tools.monitor --experiment-dir experiments/
+
 # Run tests
 python -m pytest tests/ -v
 python -m pytest tests/pure/ -v  # Test only pure functions
+python -m pytest tests/effects/ -v --db-mode=mock  # Test effects with mocks
 ```
 
 ### DuckDB VSS Operations
@@ -71,6 +78,22 @@ WITH (ef_construction = 128, ef_search = 64, M = 16, metric = 'cosine');
 SELECT * FROM table_name
 ORDER BY array_distance(vector_column, query_vector::FLOAT[n])
 LIMIT k;
+
+-- Hybrid search (vector + text)
+WITH vector_results AS (
+    SELECT id, array_distance(vector, ?::FLOAT[n]) as v_score
+    FROM table_name
+    ORDER BY v_score LIMIT 100
+),
+text_results AS (
+    SELECT id, fts_main_table.match_bm25(id, ?) as t_score  
+    FROM table_name
+    WHERE text LIKE '%' || ? || '%'
+)
+SELECT v.id, (0.7 * (1 - v.v_score)) + (0.3 * t.t_score) as score
+FROM vector_results v
+JOIN text_results t ON v.id = t.id
+ORDER BY score DESC LIMIT k;
 ```
 
 ## Key Implementation Considerations
@@ -136,3 +159,33 @@ plan/                   # Functional design documentation
 ├── 06-experiment-workflow.md
 └── 07-implementation-guide.md
 ```
+
+## Experiment Workflow
+
+The project follows a structured experiment workflow with checkpointing:
+
+1. **Data Generation**: Korean text with deterministic seeds for reproducibility
+2. **Database Initialization**: Create tables and load VSS extension
+3. **Data Insertion**: Batch insertion with performance metrics
+4. **Index Building**: HNSW index with dimension-optimized parameters
+5. **Search Execution**: Pure vector or hybrid search with filtering
+6. **Result Analysis**: Calculate accuracy metrics and generate reports
+
+Each stage supports checkpointing for resumability. See `plan/06-experiment-workflow.md` for detailed workflow design.
+
+## Key Functions and Pipelines
+
+### Pure Functions (src/pure/)
+- `generate_vector(seed, dimension)`: Create normalized vectors deterministically
+- `calculate_recall_at_k(retrieved, relevant, k)`: Accuracy metrics
+- `batch_documents(documents, batch_size)`: Split data for processing
+
+### Effect Functions (src/effects/)
+- `with_db_connection(config, f)`: Managed database connections
+- `measure_io(io)`: Performance measurement wrapper
+- `parallel_map_io(f, items)`: Concurrent IO execution
+
+### Pipeline Composition (src/pipelines/)
+- `single_experiment_pipeline(config)`: Complete experiment execution
+- `data_preparation_pipeline(config)`: Generate test data
+- `analysis_pipeline(results)`: Aggregate and visualize results
