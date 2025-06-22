@@ -19,6 +19,7 @@ from src.types.core import (
     Dimension,
     SearchType,
 )
+from src.pure.analyzers.performance_analyzer import calculate_statistical_summary
 from src.pipelines.experiments import (
     generate_experiment_matrix,
     single_experiment_pipeline,
@@ -319,6 +320,9 @@ class ExperimentRunner:
         results_data = []
 
         for result in results:
+            query_times = [sr.metrics.query_time_ms for sr in result.search_results]
+            query_stats = calculate_statistical_summary(query_times) if query_times else None
+
             result_dict = {
                 "config": {
                     "data_scale": result.config.data_scale.name,
@@ -336,6 +340,17 @@ class ExperimentRunner:
                     "insert_throughput_qps": result.insert_metrics.throughput_qps,
                     "index_time_ms": result.index_metrics.query_time_ms,
                     "search_results_count": len(result.search_results),
+                    "query_time_stats": {
+                        "avg_query_time_ms": query_stats.mean if query_stats else 0.0,
+                        "median_query_time_ms": query_stats.median if query_stats else 0.0,
+                        "min_query_time_ms": query_stats.min_value if query_stats else 0.0,
+                        "max_query_time_ms": query_stats.max_value if query_stats else 0.0,
+                        "std_dev_query_time_ms": query_stats.std_dev if query_stats else 0.0,
+                        "p5_query_time_ms": query_stats.percentile_5 if query_stats else 0.0,
+                        "p10_query_time_ms": query_stats.percentile_10 if query_stats else 0.0,
+                        "p90_query_time_ms": query_stats.percentile_90 if query_stats else 0.0,
+                        "p95_query_time_ms": query_stats.percentile_95 if query_stats else 0.0,
+                    },
                     "accuracy": {
                         "recall_at_1": result.accuracy.recall_at_1,
                         "recall_at_5": result.accuracy.recall_at_5,

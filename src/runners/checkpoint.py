@@ -10,6 +10,7 @@ from typing import List, Dict, Any
 from datetime import datetime
 
 from src.types.core import ExperimentResult, ExperimentConfig
+from src.pure.analyzers.performance_analyzer import calculate_statistical_summary
 from src.types.monads import IO
 
 
@@ -121,6 +122,9 @@ class CheckpointManager:
         json_results = []
 
         for result in results:
+            query_times = [sr.metrics.query_time_ms for sr in result.search_results]
+            query_stats = calculate_statistical_summary(query_times) if query_times else None
+
             json_result = {
                 "experiment_id": self._generate_experiment_id(result.config),
                 "config": {
@@ -152,6 +156,17 @@ class CheckpointManager:
                         "avg_query_time_ms": self._calculate_avg_query_time(
                             result.search_results
                         ),
+                        "query_time_statistics": {
+                            "mean_ms": query_stats.mean if query_stats else 0.0,
+                            "median_ms": query_stats.median if query_stats else 0.0,
+                            "std_dev_ms": query_stats.std_dev if query_stats else 0.0,
+                            "min_ms": query_stats.min_value if query_stats else 0.0,
+                            "max_ms": query_stats.max_value if query_stats else 0.0,
+                            "p5_ms": query_stats.percentile_5 if query_stats else 0.0,
+                            "p10_ms": query_stats.percentile_10 if query_stats else 0.0,
+                            "p90_ms": query_stats.percentile_90 if query_stats else 0.0,
+                            "p95_ms": query_stats.percentile_95 if query_stats else 0.0,
+                        },
                         "total_results_found": sum(
                             len(sr.retrieved_ids) for sr in result.search_results
                         ),
@@ -422,7 +437,8 @@ class CheckpointManager:
         if not search_results:
             return 0.0
 
-        return 0.0
+        total_time = sum(sr.metrics.query_time_ms for sr in search_results)
+        return total_time / len(search_results)
 
     def _estimate_experiment_duration(self, result: ExperimentResult) -> float:
         """Estimate total experiment duration"""
