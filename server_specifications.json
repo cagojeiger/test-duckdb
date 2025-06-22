@@ -1,0 +1,39 @@
+{
+  "report_generated": "2025-06-22T06:26:31.816154",
+  "hardware": {
+    "cpu_model": "AMD EPYC",
+    "cpu_cores": 8,
+    "cpu_threads": 8,
+    "cpu_architecture": "x86_64",
+    "total_memory_gb": 31.37,
+    "available_memory_gb": 29.57,
+    "memory_usage_percent": 5.7
+  },
+  "operating_system": {
+    "os_name": "Linux",
+    "os_release": "5.10.223",
+    "os_version": "#11 SMP Wed Dec 11 10:33:41 UTC 2024",
+    "distribution": "Ubuntu 22.04.5 LTS",
+    "kernel": "5.10.223"
+  },
+  "python_environment": {
+    "python_version": "3.12.8",
+    "python_implementation": "CPython",
+    "uv_version": "uv 0.7.6"
+  },
+  "duckdb_configuration": {
+    "duckdb_version": "1.3.1",
+    "vss_extension": "Available",
+    "vss_extension_details": [
+      "vss",
+      false,
+      true,
+      "/home/ubuntu/.duckdb/extensions/v1.3.1/linux_amd64/vss.duckdb_extension",
+      "Adds indexing support to accelerate Vector Similarity Search",
+      [],
+      "ccfa7c9",
+      "REPOSITORY",
+      "core"
+    ]
+  }
+}
