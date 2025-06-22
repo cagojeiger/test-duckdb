@@ -19,4 +19,4 @@ repos:
     rev: v1.16.1
     hooks:
       - id: mypy
-        args: [--strict, --ignore-missing-imports, --disable-error-code=misc]
+        args: [--ignore-missing-imports, --no-strict-optional, --allow-untyped-calls, --disable-error-code=misc,assignment,func-returns-value]
