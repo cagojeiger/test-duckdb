@@ -232,6 +232,9 @@ class TestPerformanceAnalyzer:
         assert summary.std_dev == 0.0
         assert summary.min_value == 10.0
         assert summary.max_value == 10.0
+        assert summary.percentile_5 == 10.0
+        assert summary.percentile_10 == 10.0
+        assert summary.percentile_90 == 10.0
         assert summary.percentile_95 == 10.0
 
     def test_calculate_statistical_summary_multiple_values(self) -> None:
@@ -246,6 +249,9 @@ class TestPerformanceAnalyzer:
         assert summary.min_value == 1.0
         assert summary.max_value == 10.0
         assert summary.std_dev > 0.0
+        assert summary.percentile_5 <= 3.0
+        assert summary.percentile_10 <= 4.0
+        assert summary.percentile_90 >= 9.0
         assert summary.percentile_95 >= 9.0
 
     def test_compare_accuracy_metrics_empty_results(self) -> None:
@@ -341,6 +347,9 @@ class TestPerformanceAnalyzer:
             std_dev=2.0,
             min_value=5.0,
             max_value=15.0,
+            percentile_5=6.0,
+            percentile_10=7.0,
+            percentile_90=13.0,
             percentile_95=14.0,
         )
 

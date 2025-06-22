@@ -43,6 +43,9 @@ class StatisticalSummary:
     std_dev: float
     min_value: float
     max_value: float
+    percentile_5: float
+    percentile_10: float
+    percentile_90: float
     percentile_95: float
 
 
@@ -280,6 +283,9 @@ def calculate_statistical_summary(values: List[float]) -> Optional[StatisticalSu
         std_dev=statistics.stdev(values) if len(values) > 1 else 0.0,
         min_value=min(values),
         max_value=max(values),
+        percentile_5=sorted_values[int(0.05 * len(sorted_values))],
+        percentile_10=sorted_values[int(0.10 * len(sorted_values))],
+        percentile_90=sorted_values[int(0.90 * len(sorted_values))],
         percentile_95=sorted_values[int(0.95 * len(sorted_values))],
     )
 
