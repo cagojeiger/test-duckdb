@@ -29,6 +29,7 @@ from src.effects.db.tables import (
 from src.effects.db.search import SearchQuery, vector_similarity_search, hybrid_search
 from src.pure.generators.text import generate_korean_texts
 from src.pure.generators.vectors import generate_random_vectors
+from src.pure.calculators.metrics import calculate_accuracy_metrics
 
 
 @dataclass(frozen=True)
@@ -37,6 +38,7 @@ class ExperimentData:
 
     documents: List[tuple[str, TextContent, Vector]]
     query_vectors: List[Vector]
+    ground_truth: dict[str, List[str]]  # query_id -> relevant_doc_ids
     config: ExperimentConfig
 
 
@@ -108,12 +110,26 @@ def generate_experiment_data(config: ExperimentConfig) -> IO[ExperimentData]:
             doc_id = f"doc_{config_hash}_{i:06d}"
             documents.append((doc_id, text, vector))
 
-        query_vectors = generate_random_vectors(
-            count=config.num_queries, dimension=config.dimension, seed=config_hash + 1
-        )
+        # Use some document vectors as queries to create ground truth
+        query_step = max(1, num_docs // config.num_queries)
+        query_indices = list(range(0, num_docs, query_step))[:config.num_queries]
+        
+        query_vectors = []
+        ground_truth = {}
+        
+        for i, doc_idx in enumerate(query_indices):
+            query_id = f"query_{config_hash}_{i:03d}"
+            query_vector = documents[doc_idx][2]  # Use document's vector
+            query_vectors.append(query_vector)
+            
+            doc_id = documents[doc_idx][0]
+            ground_truth[query_id] = [doc_id]
 
         return ExperimentData(
-            documents=documents, query_vectors=query_vectors, config=config
+            documents=documents, 
+            query_vectors=query_vectors, 
+            ground_truth=ground_truth,
+            config=config
         )
 
     class GenerateDataIO(IO[ExperimentData]):
@@ -234,6 +250,9 @@ def execute_search_workflow(
         config = data.config
 
         for i, query_vector in enumerate(data.query_vectors):
+            config_hash = hash(str(config)) % 2**32
+            query_id = f"query_{config_hash}_{i:03d}"
+            
             search_query = SearchQuery(
                 query_vector=query_vector,
                 k=10,
@@ -258,6 +277,12 @@ def execute_search_workflow(
                 )
 
             result = search_io.run()
+            result = SearchResult(
+                query_id=query_id,
+                retrieved_ids=result.retrieved_ids,
+                distances=result.distances,
+                metrics=result.metrics
+            )
             results.append(result)
 
         return results
@@ -289,12 +314,8 @@ def single_experiment_pipeline(config: ExperimentConfig) -> IO[ExperimentResult]
             search_io = execute_search_workflow(conn, schema, data)
             search_results = search_io.run()
 
-            accuracy_metrics = AccuracyMetrics(
-                recall_at_1=0.0,  # Will be calculated with ground truth
-                recall_at_5=0.0,
-                recall_at_10=0.0,
-                mean_reciprocal_rank=0.0,
-            )
+            # Calculate actual accuracy metrics using ground truth
+            accuracy_metrics = calculate_accuracy_metrics(search_results, data.ground_truth)
 
             return ExperimentResult(
                 config=config,
